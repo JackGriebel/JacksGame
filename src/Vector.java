@@ -108,8 +108,8 @@ public class Vector {
 
     //basic operators
 
-    //a += b;
-    //a.add(b);
+    //angle += b;
+    //angle.add(b);
     public void add(Vector o){
         this.x += o.x;
         this.y += o.y;
@@ -117,14 +117,14 @@ public class Vector {
         intify();
     }
 
-    //sum = a + b;
-    //sum = Vector.add(a, b);
+    //sum = angle + b;
+    //sum = Vector.add(angle, b);
     public static Vector add(Vector a, Vector b){
         return new Vector(a.x + b.x, a.y + b.y, a.z + b.z);
     }
 
-    //a -= b;
-    //a.sub(b);
+    //angle -= b;
+    //angle.sub(b);
     public void sub(Vector o){
         this.x -= o.x;
         this.y -= o.y;
@@ -132,14 +132,14 @@ public class Vector {
         intify();
     }
 
-    //dif = a - b;
-    //dif = Vector.sub(a, b);
+    //dif = angle - b;
+    //dif = Vector.sub(angle, b);
     public static Vector sub(Vector a, Vector b){
         return new Vector(a.x - b.x, a.y - b.y, a.z - b.z);
     }
 
-    //v *= s;
-    //v.mult(s);
+    //velocity *= s;
+    //velocity.mult(s);
     public void mult(float s){
         this.x *= s;
         this.y *= s;
@@ -147,8 +147,8 @@ public class Vector {
         intify();
     }
 
-    //prd = v * s;
-    //prd = Vector.mult(v, s);
+    //prd = velocity * s;
+    //prd = Vector.mult(velocity, s);
     public static Vector mult(Vector v, float s){
         return new Vector( v.x * s, v.y * s, v.z * s );
     }
@@ -165,8 +165,8 @@ public class Vector {
         return new Vector( v.x * (float)s, v.y * (float)s, v.z * (float)s );
     }
 
-    //v /= s;
-    //v.div(s);
+    //velocity /= s;
+    //velocity.div(s);
     public void div(float s){
         this.x /= s;
         this.y /= s;
@@ -174,8 +174,8 @@ public class Vector {
         intify();
     }
 
-    //quo = v * s;
-    //quo = Vector.div(v, s);
+    //quo = velocity * s;
+    //quo = Vector.div(velocity, s);
     public static Vector div(Vector v, float s){
         return new Vector( v.x / s, v.y / s, v.z / s );
     }

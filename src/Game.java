@@ -7,6 +7,12 @@ import java.util.ArrayList;
 
 public class Game extends JFrame implements KeyListener{
 
+    float vertMovingRectPosX = (float)Math.random() * 800;
+    float vertMovingRectPosY = 0;
+    float horizMovingRectPosX = (float)Math.random() * 800;
+    float horizMovingRectPosY = 0;
+    private int clearSwitcher = 0;
+
     //window vars
     private final int MAX_FPS; //maximum refresh rate
     private final int WIDTH; //window width
@@ -26,12 +32,12 @@ public class Game extends JFrame implements KeyListener{
     private long startFrame; //time since start of frame
     private int fps; //current fps
 
-    Vector p;
-    Vector v;
-    Vector a;
+    Vector position;
+    Vector velocity;
+    Vector angle;
     float push;
-    float friction = 0.95f;
-    int sz;
+    float friction = 0.998f;
+    int size;
 
     public Game(int width, int height, int fps){
         super("My Game");
@@ -65,35 +71,37 @@ public class Game extends JFrame implements KeyListener{
         addKeyListener(this);
         setFocusable(true);
         //set background window color
-        setBackground(Color.BLUE);
+        setBackground(Color.DARK_GRAY);
 
-        p = new Vector(0,0);
-        v = new Vector(0, 0);
-        a = new Vector(0,0);
-        sz = 100;
-        push = 100;
+        position = new Vector(400,200);
+        velocity = new Vector(0, 0);
+        angle = new Vector(0,0);
+        size = 10;
+        push = 1000;
     }
 
+    /*
     /*
      * update()
      * updates all relevant game variables before the frame draws
      */
     private void update(){
+
         //update current fps
         fps = (int)(1f/dt);
         handelKeys();
-        if(p.x + sz > WIDTH || p.x <0){
-            v.setX(v.x *= -1);
-            a = new Vector(0,0);
+        if(position.x + size > WIDTH || position.x <0){
+            velocity.setX(velocity.x *= -1);
+            angle = new Vector(0,0);
         }
-        if(p.y + sz > HEIGHT|| p.y <0) {
-            v.setY(v.y *= -1);
-            a = new Vector(0,0);
+        if(position.y + size > HEIGHT|| position.y <0) {
+            velocity.setY(velocity.y *= -1);
+            angle = new Vector(0,0);
         }
 
-        v.add(Vector.mult(a, dt));
-        v.mult(friction);
-        p.add(Vector.mult(v, dt));
+        velocity.add(Vector.mult(angle, dt));
+        //velocity.mult(friction);
+        position.add(Vector.mult(velocity, dt));
         //x+=x * dt;
         //y+=y * dt;
 
@@ -109,6 +117,7 @@ public class Game extends JFrame implements KeyListener{
         Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 
         //clear screen
+        if(clearSwitcher % 2 == 0)
         g.clearRect(0,0,WIDTH, HEIGHT);
 
         //draw fps
@@ -116,7 +125,13 @@ public class Game extends JFrame implements KeyListener{
         g.drawString(Long.toString(fps), 10, 40);
 
         g.setColor(Color.cyan);
-        g.fillRect(p.ix, p.iy, sz, sz);
+        g.fillRect(position.ix, position.iy, size, size);
+
+        g.setColor(Color.GREEN);
+        g.fillRect((int)horizMovingRectPosX, (int)horizMovingRectPosY, 20, 20);
+        g.fillRect((int)vertMovingRectPosX, (int)vertMovingRectPosY, 20, 20);
+
+
 
         //release resources, show the buffer
         g.dispose();
@@ -128,22 +143,26 @@ public class Game extends JFrame implements KeyListener{
     private void handelKeys() {
         for(int i = 0; i < keys.size(); i++) {
             switch(keys.get(i)) {
+
                 case KeyEvent.VK_UP:
-                    a = Vector.unit2D((float)Math.toRadians(-90));
-                    a.mult(push);
+                    angle = Vector.unit2D((float)Math.toRadians(-90));
+                    angle.mult(push);
                 break;
+
                 case KeyEvent.VK_RIGHT:
-                    a = Vector.unit2D(0);
-                    a.mult(push);
+                    angle = Vector.unit2D(0);
+                    angle.mult(push);
                     break;
                 case KeyEvent.VK_LEFT:
-                    a = Vector.unit2D((float)Math.toRadians(180));
-                    a.mult(push);
+                    angle = Vector.unit2D((float)Math.toRadians(180));
+                    angle.mult(push);
                     break;
+
                 case KeyEvent.VK_DOWN:
-                    a = Vector.unit2D((float)Math.toRadians(90));
-                    a.mult(push);
+                    angle = Vector.unit2D((float)Math.toRadians(90));
+                    angle.mult(push);
                     break;
+
             }
         }
     }
@@ -172,15 +191,30 @@ public class Game extends JFrame implements KeyListener{
          * calls init() to initialize variables
          * loops using isRunning
             * updates all timing variables and then calls update() and draw()
-            * dynamically sleeps the main thread to maintain a framerate close to target fps
+            * dynamically sleeps the main thread to maintain angle framerate close to target fps
          */
     public void run(){
         init();
 
         while(isRunning){
+            //TODO make an if so these only make whenn their off the screen
 
+            if(horizMovingRectPosX > WIDTH || horizMovingRectPosX < 0) {
+            float vertMovingRectPosX = (float)Math.random() * 800;
+            float vertMovingRectPosY = 0;
+            }
+            if(horizMovingRectPosY > WIDTH || horizMovingRectPosY < 0) {
+            float horizMovingRectPosX = 0;
+            float horizMovingRectPosY = (float)Math.random() * 600;
+            }
+
+            clearSwitcher++;
             //new loop, clock the start
             startFrame = System.currentTimeMillis();
+
+            horizMovingRectPosX+=3;
+            vertMovingRectPosY+=3;
+
 
             //calculate delta time
             dt = (float)(startFrame - lastFrame)/1000;
@@ -201,7 +235,10 @@ public class Game extends JFrame implements KeyListener{
             }
         }
 
+
     }
+
+
 
     //entry point for application
     public static void main(String[] args){
