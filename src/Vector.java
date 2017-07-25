@@ -138,8 +138,8 @@ public class Vector {
         return new Vector(a.x - b.x, a.y - b.y, a.z - b.z);
     }
 
-    //velocity *= s;
-    //velocity.mult(s);
+    //characterVelocity *= s;
+    //characterVelocity.mult(s);
     public void mult(float s){
         this.x *= s;
         this.y *= s;
@@ -147,8 +147,8 @@ public class Vector {
         intify();
     }
 
-    //prd = velocity * s;
-    //prd = Vector.mult(velocity, s);
+    //prd = characterVelocity * s;
+    //prd = Vector.mult(characterVelocity, s);
     public static Vector mult(Vector v, float s){
         return new Vector( v.x * s, v.y * s, v.z * s );
     }
@@ -165,8 +165,8 @@ public class Vector {
         return new Vector( v.x * (float)s, v.y * (float)s, v.z * (float)s );
     }
 
-    //velocity /= s;
-    //velocity.div(s);
+    //characterVelocity /= s;
+    //characterVelocity.div(s);
     public void div(float s){
         this.x /= s;
         this.y /= s;
@@ -174,8 +174,8 @@ public class Vector {
         intify();
     }
 
-    //quo = velocity * s;
-    //quo = Vector.div(velocity, s);
+    //quo = characterVelocity * s;
+    //quo = Vector.div(characterVelocity, s);
     public static Vector div(Vector v, float s){
         return new Vector( v.x / s, v.y / s, v.z / s );
     }

@@ -6,12 +6,17 @@ import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 
 public class Game extends JFrame implements KeyListener{
+    boolean firstTime = true;
+    boolean needVertRect = true;
+    boolean needHorizRect = true;
 
-    float vertMovingRectPosX = (float)Math.random() * 800;
-    float vertMovingRectPosY = 0;
-    float horizMovingRectPosX = (float)Math.random() * 800;
-    float horizMovingRectPosY = 0;
+    final int OBSTSIZE = 40;
+
+    Vector vertMovingRect = new Vector((int)Math.random() * 800,0);
+    Vector horizMovingRect = new Vector(0,(int)Math.random() * 800);
     private int clearSwitcher = 0;
+
+    ArrayList<Vector> obstPos = new ArrayList<>();
 
     //window vars
     private final int MAX_FPS; //maximum refresh rate
@@ -32,8 +37,8 @@ public class Game extends JFrame implements KeyListener{
     private long startFrame; //time since start of frame
     private int fps; //current fps
 
-    Vector position;
-    Vector velocity;
+    Vector characterPosition;
+    Vector characterVelocity;
     Vector angle;
     float push;
     float friction = 0.998f;
@@ -73,8 +78,8 @@ public class Game extends JFrame implements KeyListener{
         //set background window color
         setBackground(Color.DARK_GRAY);
 
-        position = new Vector(400,200);
-        velocity = new Vector(0, 0);
+        characterPosition = new Vector(400,200);
+        characterVelocity = new Vector(0, 0);
         angle = new Vector(0,0);
         size = 10;
         push = 1000;
@@ -90,18 +95,18 @@ public class Game extends JFrame implements KeyListener{
         //update current fps
         fps = (int)(1f/dt);
         handelKeys();
-        if(position.x + size > WIDTH || position.x <0){
-            velocity.setX(velocity.x *= -1);
+        if(characterPosition.x + size > WIDTH || characterPosition.x <0){
+            characterVelocity.setX(characterVelocity.x *= -1);
             angle = new Vector(0,0);
         }
-        if(position.y + size > HEIGHT|| position.y <0) {
-            velocity.setY(velocity.y *= -1);
+        if(characterPosition.y + size > HEIGHT|| characterPosition.y <0) {
+            characterVelocity.setY(characterVelocity.y *= -1);
             angle = new Vector(0,0);
         }
 
-        velocity.add(Vector.mult(angle, dt));
-        //velocity.mult(friction);
-        position.add(Vector.mult(velocity, dt));
+        characterVelocity.add(Vector.mult(angle, dt));
+        //characterVelocity.mult(friction);
+        characterPosition.add(Vector.mult(characterVelocity, dt));
         //x+=x * dt;
         //y+=y * dt;
 
@@ -112,33 +117,42 @@ public class Game extends JFrame implements KeyListener{
      * gets the canvas (Graphics2D) and draws all elements
      * disposes canvas and then flips the buffer
      */
-    private void draw(){
+    private void draw() {
         //get canvas
         Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 
         //clear screen
-        if(clearSwitcher % 2 == 0)
-        g.clearRect(0,0,WIDTH, HEIGHT);
+        if (clearSwitcher % 2 == 0)
+            g.clearRect(0, 0, WIDTH, HEIGHT);
 
         //draw fps
         g.setColor(Color.GREEN);
         g.drawString(Long.toString(fps), 10, 40);
 
         g.setColor(Color.cyan);
-        g.fillRect(position.ix, position.iy, size, size);
-
+        g.fillRect(characterPosition.ix, characterPosition.iy, size, size);
+        if (horizMovingRect.x + OBSTSIZE > WIDTH || horizMovingRect.x < 0 || firstTime) {
+            horizMovingRect.x = 0;
+            horizMovingRect.y = (float) Math.random() * 600;
+            System.out.println("Horizontal rectangle created");
+        }
         g.setColor(Color.GREEN);
-        g.fillRect((int)horizMovingRectPosX, (int)horizMovingRectPosY, 20, 20);
-        g.fillRect((int)vertMovingRectPosX, (int)vertMovingRectPosY, 20, 20);
-
-
-
+        g.fillRect((int) horizMovingRect.x, (int) horizMovingRect.y, OBSTSIZE, OBSTSIZE);
+        if (vertMovingRect.y + OBSTSIZE > HEIGHT || vertMovingRect.y < 0 || firstTime) {
+        vertMovingRect.x = (float) Math.random() * 800;
+        vertMovingRect.y = 0;
+        System.out.println("vertical rectangle created");
+    }
+        g.setColor(Color.MAGENTA);
+        g.fillRect((int) vertMovingRect.x, (int) vertMovingRect.y, OBSTSIZE, OBSTSIZE);
+    firstTime = false;
         //release resources, show the buffer
         g.dispose();
         strategy.show();
-
-
     }
+
+
+
 
     private void handelKeys() {
         for(int i = 0; i < keys.size(); i++) {
@@ -195,25 +209,15 @@ public class Game extends JFrame implements KeyListener{
          */
     public void run(){
         init();
+        while(isRunning) {
 
-        while(isRunning){
-            //TODO make an if so these only make whenn their off the screen
-
-            if(horizMovingRectPosX > WIDTH || horizMovingRectPosX < 0) {
-            float vertMovingRectPosX = (float)Math.random() * 800;
-            float vertMovingRectPosY = 0;
-            }
-            if(horizMovingRectPosY > WIDTH || horizMovingRectPosY < 0) {
-            float horizMovingRectPosX = 0;
-            float horizMovingRectPosY = (float)Math.random() * 600;
-            }
 
             clearSwitcher++;
             //new loop, clock the start
             startFrame = System.currentTimeMillis();
 
-            horizMovingRectPosX+=3;
-            vertMovingRectPosY+=3;
+            horizMovingRect.x+=3;
+            vertMovingRect.y+=3;
 
 
             //calculate delta time
@@ -237,9 +241,6 @@ public class Game extends JFrame implements KeyListener{
 
 
     }
-
-
-
     //entry point for application
     public static void main(String[] args){
         Game game = new Game(800, 600, 60);
