@@ -7,8 +7,13 @@ import java.util.ArrayList;
 
 public class Game extends JFrame implements KeyListener{
     boolean firstTime = true;
-    boolean vertRectNeeded = true;
-    boolean horizRectNeeded = true;
+    boolean vertRectNeeded1 = true;
+    boolean horizRectNeeded1 = true;
+    boolean newRectsNeeded = true;
+
+    boolean needNewHalfRects;
+
+    final int ENEMYSPEED = 3;
 
     int coins = 0;
     int coinMultiplier = 1;
@@ -16,10 +21,11 @@ public class Game extends JFrame implements KeyListener{
 
     boolean inGame = true;
 
-    final int OBSTSIZE = 40;
+    final int OBSTSIZE = 150;
 
-    Vector vertMovingRect = new Vector((int)Math.random() * 800,0);
-    Vector horizMovingRect = new Vector(0,(int)Math.random() * 800);
+    Vector vertMovingRect1 = new Vector((int)Math.random() * 800,0);
+    Vector horizMovingRect1 = new Vector(0,(int)Math.random() * 800);
+    Vector horizMovingRect2 = new Vector(0,(int)Math.random() * 800);
     private int clearSwitcher = 0;
 
 
@@ -112,16 +118,21 @@ public class Game extends JFrame implements KeyListener{
 
     private void update(){
         if(inGame) {
-            horizMovingRect.x+=3;
-            vertMovingRect.y+=3;
-            //colision detection (aabb)
-            vertRectNeeded = checkCollision(characterPosition, vertMovingRect, OBSTSIZE, characterSize);
-            horizRectNeeded = checkCollision(characterPosition, horizMovingRect, OBSTSIZE, characterSize);
+
+            /*
+            horizMovingRect1.x+=3;
+            vertMovingRect1.y+=3;
+
+
+            vertRectNeeded1 = checkCollision(characterPosition, vertMovingRect1, OBSTSIZE, characterSize);
+            horizRectNeeded1 = checkCollision(characterPosition, horizMovingRect1, OBSTSIZE, characterSize);
+
+            */
 
             //update current fps
             fps = (int) (1f / dt);
             handelKeys();
-            //bouncing off walls
+            //bounce off walls
             if (characterPosition.x + characterSize > WIDTH  || characterPosition.x < 88) {
                 characterVelocity.setX(characterVelocity.x *= -1);
                 angle = new Vector(0, 0);
@@ -136,6 +147,9 @@ public class Game extends JFrame implements KeyListener{
             characterPosition.add(Vector.mult(characterVelocity, dt));
             //x+=x * dt;
             //y+=y * dt;
+            Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
+            g.setColor(Color.white);
+            g.drawString("ADSFASDFA", WIDTH / 2, HEIGHT / 2);
         }
 
     }
@@ -145,13 +159,60 @@ public class Game extends JFrame implements KeyListener{
      * gets the canvas (Graphics2D) and draws all elements
      * disposes canvas and then flips the buffer
      */
-    private void draw() {
+    //TODO fix everything
+    public void handleRectangle(boolean rectangleNeeded, int size, Vector rectangle, Graphics2D g, boolean movesVert, int rectSize, int rectSpeed, int rectangleLevel) {
+        if (!checkCollision(characterPosition, rectangle, size, characterSize)) {
+            rectangleNeeded = false;
+            System.out.println("Collision detected");
+        }
+        if (!movesVert) {
+            rectangle.x += ENEMYSPEED;
+            if (rectangle.x + size > WIDTH || rectangle.x < 0 || firstTime) {
+                rectangle.x = 88;
+                rectangle.y = (float) Math.random() * 550;
+                System.out.println("Horizontal rectangle created");
+            }
+            if (rectangleNeeded) {
+                g.setColor(Color.GREEN);
+                g.drawRect((int) rectangle.x, (int) rectangle.y, size, size);
+            } else {
+                if(rectangleLevel < 4) {
+                    needNewHalfRects = true;
+                   // handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (rectSpeed * 1.5), rectangleLevel++);
+                } else {
+                    newRectsNeeded = true;
+                }
+            }
+
+        } else {
+            rectangle.y += ENEMYSPEED;
+            if (rectangle.y + size > HEIGHT || rectangle.y < 0 || firstTime) {
+                rectangle.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
+                rectangle.y = 0;
+                System.out.println("vertical rectangle created");
+            }
+            if (rectangleNeeded) {
+                g.setColor(Color.MAGENTA);
+                g.drawRect((int) rectangle.x, (int) rectangle.y, size, size);
+            } else {
+                if(rectangleLevel < 4) {
+                    handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (rectSpeed * 1.5), rectangleLevel++);
+                } else {
+                    newRectsNeeded = true;
+                }
+            }
+
+        }
+    }
+
+        private void draw() {
         //get canvas
         Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 
 
 
         //clear screen
+
         if(inGame) {
             //draw fps
            // if (clearSwitcher % 2 == 0)
@@ -165,44 +226,57 @@ public class Game extends JFrame implements KeyListener{
 
             g.setColor(Color.cyan);
             g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
-            if (horizMovingRect.x + OBSTSIZE > WIDTH || horizMovingRect.x < 0 || firstTime) {
-                horizMovingRect.x = 88;
-                horizMovingRect.y = (float) Math.random() * 550;
+
+           // if(newRectsNeeded) {
+            handleRectangle(newRectsNeeded, OBSTSIZE, horizMovingRect1, g, false, OBSTSIZE, ENEMYSPEED, 1);
+            handleRectangle(newRectsNeeded, OBSTSIZE, vertMovingRect1, g, true, OBSTSIZE, ENEMYSPEED, 1);
+            handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (ENEMYSPEED * 1.5), 2);
+          //  newRectsNeeded = false;
+              //  }
+
+
+
+            /*
+            if (horizMovingRect1.x + OBSTSIZE > WIDTH || horizMovingRect1.x < 0 || firstTime) {
+                horizMovingRect1.x = 88;
+                horizMovingRect1.y = (float) Math.random() * 550;
                 System.out.println("Horizontal rectangle created");
             }
-            if (horizRectNeeded) {
+            if (horizRectNeeded1) {
                 g.setColor(Color.GREEN);
-                g.fillRect((int) horizMovingRect.x, (int) horizMovingRect.y, OBSTSIZE, OBSTSIZE);
+                g.drawRect((int) horizMovingRect1.x, (int) horizMovingRect1.y, OBSTSIZE, OBSTSIZE);
             } else {
-                horizMovingRect.x = 88;
-                horizMovingRect.y = (float) Math.random() * 550;
-                horizRectNeeded = true;
+                horizMovingRect1.x = 88;
+                horizMovingRect1.y = (float) Math.random() * 550;
+                horizRectNeeded1 = true;
             }
 
-            if (vertMovingRect.y + OBSTSIZE > HEIGHT || vertMovingRect.y < 0 || firstTime) {
-                vertMovingRect.x = (float) Math.random() * 750;
-                vertMovingRect.y = 0;
+            if (vertMovingRect1.y + OBSTSIZE > HEIGHT || vertMovingRect1.y < 0 || firstTime) {
+                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50)+ 88;
+                vertMovingRect1.y = 0;
                 System.out.println("vertical rectangle created");
             }
-            if (vertRectNeeded) {
+            if (vertRectNeeded1) {
                 g.setColor(Color.MAGENTA);
-                g.fillRect((int) vertMovingRect.x, (int) vertMovingRect.y, OBSTSIZE, OBSTSIZE);
+                g.fillRect((int) vertMovingRect1.x, (int) vertMovingRect1.y, OBSTSIZE, OBSTSIZE);
             } else {
-                vertMovingRect.x = (float) Math.random() * 750;
-                vertMovingRect.y = 0;
-                vertRectNeeded = true;
+                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
+                vertMovingRect1.y = 0;
+                vertRectNeeded1 = true;
             }
+            */
             firstTime = false;
             //release resources, show the buffer
             g.setColor(Color.cyan);
-            g.fillRect(0,100,88,700);
+            g.fillRect(0,100,88,HEIGHT - 100);
         } else {
 
             //g.setColor(Color.BLACK);
             //g.fillRect(0, 0, 800, 600);
             g.setFont(new Font("", Font.PLAIN,75));
             g.setColor(Color.white);
-            g.drawString("PAUSE", 275, 300);
+            g.drawString("PAUSE", WIDTH / 2 - 175  , HEIGHT/ 2);
+
             //g.setColor(Color.cyan);
             //g.drawRect(100, 100, 100, 60);
             //g.setFont(new Font("", Font.PLAIN,15));
@@ -319,8 +393,59 @@ public class Game extends JFrame implements KeyListener{
     }
     //entry point for application
     public static void main(String[] args){
-        Game game = new Game(800, 600, 60);
+        Game game = new Game(1066, 800, 60);
         game.run();
     }
 
+
 }
+
+
+
+
+
+/*
+vertRectNeeded1 = checkCollision(characterPosition, vertMovingRect1, OBSTSIZE, characterSize);
+horizRectNeeded1 = checkCollision(characterPosition, horizMovingRect1, OBSTSIZE, characterSize);
+
+horizMovingRect1.x+=3;
+vertMovingRect1.y+=3;
+
+if (horizMovingRect1.x + OBSTSIZE > WIDTH || horizMovingRect1.x < 0 || firstTime) {
+                horizMovingRect1.x = 88;
+                horizMovingRect1.y = (float) Math.random() * 550;
+                System.out.println("Horizontal rectangle created");
+            }
+            if (horizRectNeeded1) {
+                g.setColor(Color.GREEN);
+                g.drawRect((int) horizMovingRect1.x, (int) horizMovingRect1.y, OBSTSIZE, OBSTSIZE);
+            } else {
+                horizMovingRect1.x = 88;
+                horizMovingRect1.y = (float) Math.random() * 550;
+                horizRectNeeded1 = true;
+            }
+
+
+
+            if (vertMovingRect1.y + OBSTSIZE > HEIGHT || vertMovingRect1.y < 0 || firstTime) {
+                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50)+ 88;
+                vertMovingRect1.y = 0;
+                System.out.println("vertical rectangle created");
+            }
+            if (vertRectNeeded1) {
+                g.setColor(Color.MAGENTA);
+                g.fillRect((int) vertMovingRect1.x, (int) vertMovingRect1.y, OBSTSIZE, OBSTSIZE);
+            } else {
+                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
+                vertMovingRect1.y = 0;
+                vertRectNeeded1 = true;
+            }
+
+
+
+
+
+
+
+
+ */
