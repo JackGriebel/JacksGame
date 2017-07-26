@@ -4,7 +4,7 @@ import java.awt.image.BufferStrategy;
 
 public class BasicFramework extends JFrame {
 
-    //final variables for window size and refresh rate
+    //final variables for window characterSize and refresh rate
     private final int MAX_FPS;
     private final int WIDTH;
     private final int HEIGHT;
@@ -21,7 +21,7 @@ public class BasicFramework extends JFrame {
 
     //initialize variables, set up the window
     void init(){
-        //initialize window size
+        //initialize window characterSize
         setBounds(0, 0, WIDTH, HEIGHT);
         setResizable(false);
 
