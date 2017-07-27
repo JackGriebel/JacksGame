@@ -7,12 +7,8 @@ import java.util.ArrayList;
 
 public class Game extends JFrame implements KeyListener{
     boolean firstTime = true;
-    boolean vertRectNeeded1 = true;
-    boolean horizRectNeeded1 = true;
-    boolean newRectsNeeded = true;
-
-
-    boolean needNewHalfRects;
+    long numFrames = 0;
+    int spawnFrequency = 500; //lower is faster
 
     final int ENEMYSPEED = 3;
 
@@ -22,11 +18,8 @@ public class Game extends JFrame implements KeyListener{
 
     boolean inGame = true;
 
-    final int OBSTSIZE = 150;
+    final int OBSTSIZE = 50;
 
-    Vector vertMovingRect1 = new Vector((int)Math.random() * 800,0);
-    Vector horizMovingRect1 = new Vector(0,(int)Math.random() * 800);
-    Vector horizMovingRect2 = new Vector(0,(int)Math.random() * 800);
     private int clearSwitcher = 0;
 
 
@@ -119,19 +112,7 @@ public class Game extends JFrame implements KeyListener{
 
     private void update(){
         if(inGame) {
-
-            /*
-            horizMovingRect1.x+=3;
-            vertMovingRect1.y+=3;
-
-
-            vertRectNeeded1 = checkCollision(characterPosition, vertMovingRect1, OBSTSIZE, characterSize);
-            horizRectNeeded1 = checkCollision(characterPosition, horizMovingRect1, OBSTSIZE, characterSize);
-
-            */
-
-
-
+            numFrames++;
             //update current fps
             fps = (int) (1f / dt);
             handelKeys();
@@ -145,14 +126,27 @@ public class Game extends JFrame implements KeyListener{
                 angle = new Vector(0, 0);
             }
 
+            if(getAgeInSeconds() == 15) {
+                spawnFrequency = 400;
+            }
+            if(getAgeInSeconds() == 20) {
+                spawnFrequency = 300;
+            }
+            if(getAgeInSeconds() == 30) {
+                spawnFrequency = 200;
+            }
+            if(getAgeInSeconds() == 40) {
+                spawnFrequency = 100;
+            }
+            if(getAgeInSeconds() == 60) {
+                spawnFrequency = 50;
+            }
+            if(getAgeInSeconds() == 85) {
+                spawnFrequency = 25;
+            }
             characterVelocity.add(Vector.mult(angle, dt));
-            //characterVelocity.mult(friction);
             characterPosition.add(Vector.mult(characterVelocity, dt));
-            //x+=x * dt;
-            //y+=y * dt;
-            Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-            g.setColor(Color.white);
-            g.drawString("ADSFASDFA", WIDTH / 2, HEIGHT / 2);
+
         }
 
     }
@@ -162,73 +156,36 @@ public class Game extends JFrame implements KeyListener{
      * gets the canvas (Graphics2D) and draws all elements
      * disposes canvas and then flips the buffer
      */
-
-/* FUNCTION THAT WAS PORTED TO RECTANGLE.JAVA
-    public void handleRectangle(boolean rectangleNeeded, int size, Vector rectangle, Graphics2D g, boolean movesVert, int rectSize, int rectSpeed, int rectangleLevel) {
-        if (!checkCollision(characterPosition, rectangle, size, characterSize)) {
-            rectangleNeeded = false;
-            System.out.println("Collision detected");
-        }
-        if (!movesVert) {
-            rectangle.x += ENEMYSPEED;
-            if (rectangle.x + size > WIDTH || rectangle.x < 0 || firstTime) {
-                rectangle.x = 88;
-                rectangle.y = (float) Math.random() * 550;
-                System.out.println("Horizontal rectangle created");
-            }
-            if (rectangleNeeded) {
-                g.setColor(Color.GREEN);
-                g.drawRect((int)rectangle.x, (int) rectangle.y, size, size);
+   ArrayList rectangles = new ArrayList();
+        public void createNewRectangle(Graphics2D g){
+            if(clearSwitcher % 2 == 0) {
+                rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534 + 88), 0), new Vector(0, ENEMYSPEED), new Vector(OBSTSIZE, OBSTSIZE), new Color((int) (Math.random() * 0x1000000)), true, (int) (Math.random() * 5) + 1));
+                clearSwitcher++;
             } else {
-                if(rectangleLevel < 4) {
-                    rectangle.x = 88;
-                    rectangle.y = (float) Math.random() * 550;
-                } else {
-                    newRectsNeeded = true;
-                }
+                rectangles.add(new Rectangle(new Vector(88, (int)(Math.random() * 750)), new Vector(3, 0), new Vector(OBSTSIZE, OBSTSIZE), new Color((int) (Math.random() * 0x1000000)), false, (int) (Math.random() * 5) + 1));
+                clearSwitcher++;
             }
 
-        } else {
-            rectangle.y += ENEMYSPEED;
-            if (rectangle.y + size > HEIGHT || rectangle.y < 0 || firstTime) {
-                rectangle.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
-                rectangle.y = 0;
-                System.out.println("vertical rectangle created");
-            }
-            if (rectangleNeeded) {
-                g.setColor(Color.MAGENTA);
-                g.drawRect((int) rectangle.x, (int) rectangle.y, size, size);
-            } else {
-                if(rectangleLevel < 4) {
-                    rectangle.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
-                    rectangle.y = 0;
-                } else {
-                    newRectsNeeded = true;
-                }
-            }
 
         }
+    private final long createdMillis = System.currentTimeMillis();
+
+    public int getAgeInSeconds() {
+        long nowMillis = System.currentTimeMillis();
+        return (int)((nowMillis - this.createdMillis) / 1000);
     }
-*/ArrayList rectangles = new ArrayList();
 
         private void draw() {
         //get canvas
-
             Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 
-
-            if(firstTime) {
-                rectangles.add(new Rectangle(new Vector(600, 0), new Vector(0, 3), new Vector(OBSTSIZE, OBSTSIZE), Color.green, true));
-                rectangles.add(new Rectangle(new Vector(5, 0), new Vector(3, 0), new Vector(OBSTSIZE, OBSTSIZE), Color.MAGENTA, false));
-                firstTime = false;
+        if(inGame) {
+            g.clearRect(0, 0, WIDTH, HEIGHT);
+            if(numFrames % spawnFrequency == 0) {
+                createNewRectangle(g);
             }
 
-        //clear screen
 
-        if(inGame) {
-            //draw fps
-           // if (clearSwitcher % 2 == 0)
-                g.clearRect(0, 0, WIDTH, HEIGHT);
 
 
             for(int i = 0; i < rectangles.size(); i++) {
@@ -243,20 +200,10 @@ public class Game extends JFrame implements KeyListener{
 
             g.setColor(Color.GREEN);
             g.drawString(Long.toString(fps), 10, 40);
-
             g.setColor(Color.yellow);
             g.drawString("Coins: " + coins, 10, 60);
-
             g.setColor(Color.cyan);
             g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
-
-           // if(newRectsNeeded) {
-            //handleRectangle(newRectsNeeded, OBSTSIZE, horizMovingRect1, g, false, OBSTSIZE, ENEMYSPEED, 1);
-            //handleRectangle(newRectsNeeded, OBSTSIZE, vertMovingRect1, g, true, OBSTSIZE, ENEMYSPEED, 1);
-            //handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (ENEMYSPEED * 1.5), 2);
-          //  newRectsNeeded = false;
-              //  }
-
             firstTime = false;
             //release resources, show the buffer
             g.setColor(Color.cyan);
@@ -331,6 +278,27 @@ public class Game extends JFrame implements KeyListener{
 
                 }
                 System.out.println("Not in game");
+                break;
+
+            case KeyEvent.VK_W:
+                angle = Vector.unit2D((float)Math.toRadians(-90));
+                angle.mult(push);
+                break;
+
+            case KeyEvent.VK_D:
+                angle = Vector.unit2D(0);
+                angle.mult(push);
+                break;
+            case KeyEvent.VK_A:
+                angle = Vector.unit2D((float)Math.toRadians(180));
+                angle.mult(push);
+                break;
+
+            case KeyEvent.VK_S:
+                angle = Vector.unit2D((float)Math.toRadians(90));
+                angle.mult(push);
+                break;
+
         }
     }
 
@@ -344,9 +312,6 @@ public class Game extends JFrame implements KeyListener{
     public void run(){
         init();
         while(isRunning) {
-
-
-            clearSwitcher++;
             //new loop, clock the start
             startFrame = System.currentTimeMillis();
 
