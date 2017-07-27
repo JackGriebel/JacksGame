@@ -27,25 +27,24 @@ public class Rectangle {
      * @param g - the graphics 2d object
      * @param movesVert - weather it moves verticle or horizontal
      */
+    boolean rectangleAlive = true;
     public void update(int dt, Rectangle rectangle, Graphics2D g, boolean movesVert) {
-        //if(newRectangleNeeded(Game.characterPosition, rectangle, (int)rectangle.size.x, Game.characterSize)) {
-        //    makeNewRects(true, rectangle, 1066);
-       // }
-        draw(g);
+        if(!Game.checkCollision(new Vector(493, 360), rectangle, 50, 80)) {
+            for(Vector i = size; i.ix > 0; i.sub(new Vector(1,1))) {
+                size = i;
+                System.out.println("shrinking");
+            }
+            rectangleAlive = false;
+        }
+        if(rectangleAlive) {
+            draw(g);
+        }
+
         speed = Vector.sub(Game.characterPosition, rectangle.position);
         speed.setMag(rectangle.rectSpeed);
         rectangle.position.add(speed);
+        //System.out.println("Rectangle position is " + rectangle.position.x + " , " + rectangle.position.y);
 
-        if (rectangle.position.x + size.x > 1066 || rectangle.position.x < 0) {
-            rectangle.position.x = 88;
-            rectangle.position.y = (float) Math.random() * 550;
-            System.out.println("Horizontal rectangle created");
-        }
-        if (rectangle.position.y + size.y > 800 || rectangle.position.y < 0) {
-            rectangle.position.x = (float) Math.random() * (1066 - 88 - 50) + 88;
-            rectangle.position.y = 0;
-            System.out.println("vertical rectangle created");
-        }
     }
 
 

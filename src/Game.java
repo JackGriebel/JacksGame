@@ -8,8 +8,11 @@ import java.util.ArrayList;
 public class Game extends JFrame implements KeyListener{
     boolean firstTime = true;
     long numFrames = 0;
-    int spawnFrequency = 500; //lower is faster
+    int spawnFrequency = 500; //lower is faster, should be a multiple of 10
 
+    boolean touchingWalls = false;
+
+    final int PLAYERSPEED = 6;
     final int ENEMYSPEED = 3;
 
     static int coins = 0;
@@ -87,7 +90,7 @@ public class Game extends JFrame implements KeyListener{
         characterVelocity = new Vector(0, 0);
         angle = new Vector(0,0);
         characterSize = 10;
-        push = 500;
+        push = 0;
     }
 
     /*
@@ -103,7 +106,7 @@ public class Game extends JFrame implements KeyListener{
                         characterPosition.y < movingRect.position.y + OBSTSIZE &&
                         characterPosition.y + characterSize > movingRect.position.y
                 ) {
-             coins+= coinMultiplier;
+            // coins+= coinMultiplier;
              return false;
         } else {
             return true;
@@ -117,31 +120,40 @@ public class Game extends JFrame implements KeyListener{
             fps = (int) (1f / dt);
             handelKeys();
             //bounce off walls
-            if (characterPosition.x + characterSize > WIDTH  || characterPosition.x < 88) {
-                characterVelocity.setX(characterVelocity.x *= -1);
-                angle = new Vector(0, 0);
+            if (characterPosition.x + characterSize > WIDTH ) {
+                characterPosition.x-=1;
+                touchingWalls = true;
             }
-            if (characterPosition.y + characterSize > HEIGHT || characterPosition.y < 30) {
-                characterVelocity.setY(characterVelocity.y *= -1);
-                angle = new Vector(0, 0);
+            if( characterPosition.x < 88) {
+                characterPosition.x+=1;
+                touchingWalls = true;
+            }
+            if (characterPosition.y + characterSize > HEIGHT) {
+                characterPosition.y -= 1;
+                touchingWalls = true;
+            }
+            if(characterPosition.y < 30)
+            {
+                characterPosition.y += 1;
+                touchingWalls = true;
             }
 
-            if(getAgeInSeconds() == 15) {
+            if(getAgeInSeconds() == 10) {
                 spawnFrequency = 400;
             }
-            if(getAgeInSeconds() == 20) {
+            if(getAgeInSeconds() == 15) {
                 spawnFrequency = 300;
             }
-            if(getAgeInSeconds() == 30) {
+            if(getAgeInSeconds() == 20) {
                 spawnFrequency = 200;
             }
-            if(getAgeInSeconds() == 40) {
+            if(getAgeInSeconds() == 30) {
                 spawnFrequency = 100;
             }
-            if(getAgeInSeconds() == 60) {
+            if(getAgeInSeconds() == 40) {
                 spawnFrequency = 50;
             }
-            if(getAgeInSeconds() == 85) {
+            if(getAgeInSeconds() == 50) {
                 spawnFrequency = 25;
             }
             characterVelocity.add(Vector.mult(angle, dt));
@@ -178,16 +190,27 @@ public class Game extends JFrame implements KeyListener{
         private void draw() {
         //get canvas
             Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-
+            Vector killBox = new Vector(WIDTH / 2 - 40, HEIGHT / 2 - 40);
+            if (
+                    characterPosition.x < killBox.x + 80 &&
+                            characterPosition.x + characterSize > killBox.x &&
+                            characterPosition.y < killBox.y + 80 &&
+                            characterPosition.y + characterSize > killBox.y
+                    )  {
+                System.out.println("Life lost");
+            }
+                // coins+= coinMultiplier;
         if(inGame) {
             g.clearRect(0, 0, WIDTH, HEIGHT);
             if(numFrames % spawnFrequency == 0) {
                 createNewRectangle(g);
             }
+            //g.setColor(Color.GREEN);
+           // g.fillRect(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
-
-
-
+            for(int k = 150; k >= 5; k -=5) {
+                g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
+            }
             for(int i = 0; i < rectangles.size(); i++) {
                 Rectangle rect = (Rectangle) rectangles.get(i);
                 rect.update((int)dt,rect, g, rect.movesVert);
@@ -221,30 +244,30 @@ public class Game extends JFrame implements KeyListener{
 
 
     private void handelKeys() {
+        if(!touchingWalls) {
         for(int i = 0; i < keys.size(); i++) {
             switch(keys.get(i)) {
-                case KeyEvent.VK_UP:
-                    angle = Vector.unit2D((float)Math.toRadians(-90));
-                    angle.mult(push);
-                break;
-
-                case KeyEvent.VK_RIGHT:
-                    angle = Vector.unit2D(0);
-                    angle.mult(push);
-                    break;
-                case KeyEvent.VK_LEFT:
-                    angle = Vector.unit2D((float)Math.toRadians(180));
-                    angle.mult(push);
+                case KeyEvent.VK_W:
+                    characterPosition.add(new Vector(0, -PLAYERSPEED));
                     break;
 
-                case KeyEvent.VK_DOWN:
-                    angle = Vector.unit2D((float)Math.toRadians(90));
-                    angle.mult(push);
+                case KeyEvent.VK_D:
+                    characterPosition.add(new Vector(PLAYERSPEED, 0));
+                    break;
+                case KeyEvent.VK_A:
+                    characterPosition.add(new Vector(-PLAYERSPEED, 0));
                     break;
 
-
+                case KeyEvent.VK_S:
+                    characterPosition.add(new Vector(0, PLAYERSPEED));
+                    break;
 
             }
+            }
+
+            } else {
+            System.out.println("hit wall");
+            touchingWalls = false;
         }
     }
 
@@ -279,26 +302,6 @@ public class Game extends JFrame implements KeyListener{
                 }
                 System.out.println("Not in game");
                 break;
-
-            case KeyEvent.VK_W:
-                angle = Vector.unit2D((float)Math.toRadians(-90));
-                angle.mult(push);
-                break;
-
-            case KeyEvent.VK_D:
-                angle = Vector.unit2D(0);
-                angle.mult(push);
-                break;
-            case KeyEvent.VK_A:
-                angle = Vector.unit2D((float)Math.toRadians(180));
-                angle.mult(push);
-                break;
-
-            case KeyEvent.VK_S:
-                angle = Vector.unit2D((float)Math.toRadians(90));
-                angle.mult(push);
-                break;
-
         }
     }
 
@@ -347,53 +350,3 @@ public class Game extends JFrame implements KeyListener{
 
 
 }
-
-
-
-
-
-/*
-vertRectNeeded1 = checkCollision(characterPosition, vertMovingRect1, OBSTSIZE, characterSize);
-horizRectNeeded1 = checkCollision(characterPosition, horizMovingRect1, OBSTSIZE, characterSize);
-
-horizMovingRect1.x+=3;
-vertMovingRect1.y+=3;
-
-if (horizMovingRect1.x + OBSTSIZE > WIDTH || horizMovingRect1.x < 0 || firstTime) {
-                horizMovingRect1.x = 88;
-                horizMovingRect1.y = (float) Math.random() * 550;
-                System.out.println("Horizontal rectangle created");
-            }
-            if (horizRectNeeded1) {
-                g.setColor(Color.GREEN);
-                g.drawRect((int) horizMovingRect1.x, (int) horizMovingRect1.y, OBSTSIZE, OBSTSIZE);
-            } else {
-                horizMovingRect1.x = 88;
-                horizMovingRect1.y = (float) Math.random() * 550;
-                horizRectNeeded1 = true;
-            }
-
-
-
-            if (vertMovingRect1.y + OBSTSIZE > HEIGHT || vertMovingRect1.y < 0 || firstTime) {
-                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50)+ 88;
-                vertMovingRect1.y = 0;
-                System.out.println("vertical rectangle created");
-            }
-            if (vertRectNeeded1) {
-                g.setColor(Color.MAGENTA);
-                g.fillRect((int) vertMovingRect1.x, (int) vertMovingRect1.y, OBSTSIZE, OBSTSIZE);
-            } else {
-                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
-                vertMovingRect1.y = 0;
-                vertRectNeeded1 = true;
-            }
-
-
-
-
-
-
-
-
- */
