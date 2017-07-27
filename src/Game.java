@@ -11,12 +11,13 @@ public class Game extends JFrame implements KeyListener{
     boolean horizRectNeeded1 = true;
     boolean newRectsNeeded = true;
 
+
     boolean needNewHalfRects;
 
     final int ENEMYSPEED = 3;
 
-    int coins = 0;
-    int coinMultiplier = 1;
+    static int coins = 0;
+    static int coinMultiplier = 1;
     int coinStopper = 0;
 
     boolean inGame = true;
@@ -31,8 +32,8 @@ public class Game extends JFrame implements KeyListener{
 
     //window vars
     private final int MAX_FPS; //maximum refresh rate
-    private final int WIDTH; //window width
-    private final int HEIGHT; //window height
+    public  final int WIDTH; //window width
+    public final int HEIGHT; //window height
 
     //double buffer strategy
     private BufferStrategy strategy;
@@ -48,12 +49,12 @@ public class Game extends JFrame implements KeyListener{
     private long startFrame; //time since start of frame
     private int fps; //current fps
 
-    Vector characterPosition;
+    public static Vector characterPosition;
     Vector characterVelocity;
     Vector angle;
     float push;
     float friction = 0.998f;
-    int characterSize;
+    static int characterSize;
 
     public Game(int width, int height, int fps){
         super("My Game");
@@ -102,12 +103,12 @@ public class Game extends JFrame implements KeyListener{
      * updates all relevant game variables before the frame draws
      */
 
-    private boolean checkCollision(Vector characterPosition, Vector movingRect, int OBSTSIZE, int characterSize) {
+    public static boolean checkCollision(Vector characterPosition, Rectangle movingRect, int OBSTSIZE, int characterSize) {
         if (
-                characterPosition.x < movingRect.x + OBSTSIZE &&
-                        characterPosition.x + characterSize > movingRect.x &&
-                        characterPosition.y < movingRect.y + OBSTSIZE &&
-                        characterPosition.y + characterSize > movingRect.y
+                characterPosition.x < movingRect.position.x + OBSTSIZE &&
+                        characterPosition.x + characterSize > movingRect.position.x &&
+                        characterPosition.y < movingRect.position.y + OBSTSIZE &&
+                        characterPosition.y + characterSize > movingRect.position.y
                 ) {
              coins+= coinMultiplier;
              return false;
@@ -129,6 +130,8 @@ public class Game extends JFrame implements KeyListener{
 
             */
 
+
+
             //update current fps
             fps = (int) (1f / dt);
             handelKeys();
@@ -137,7 +140,7 @@ public class Game extends JFrame implements KeyListener{
                 characterVelocity.setX(characterVelocity.x *= -1);
                 angle = new Vector(0, 0);
             }
-            if (characterPosition.y + characterSize > HEIGHT || characterPosition.y < 0) {
+            if (characterPosition.y + characterSize > HEIGHT || characterPosition.y < 30) {
                 characterVelocity.setY(characterVelocity.y *= -1);
                 angle = new Vector(0, 0);
             }
@@ -159,7 +162,8 @@ public class Game extends JFrame implements KeyListener{
      * gets the canvas (Graphics2D) and draws all elements
      * disposes canvas and then flips the buffer
      */
-    //TODO fix everything
+
+/* FUNCTION THAT WAS PORTED TO RECTANGLE.JAVA
     public void handleRectangle(boolean rectangleNeeded, int size, Vector rectangle, Graphics2D g, boolean movesVert, int rectSize, int rectSpeed, int rectangleLevel) {
         if (!checkCollision(characterPosition, rectangle, size, characterSize)) {
             rectangleNeeded = false;
@@ -174,11 +178,11 @@ public class Game extends JFrame implements KeyListener{
             }
             if (rectangleNeeded) {
                 g.setColor(Color.GREEN);
-                g.drawRect((int) rectangle.x, (int) rectangle.y, size, size);
+                g.drawRect((int)rectangle.x, (int) rectangle.y, size, size);
             } else {
                 if(rectangleLevel < 4) {
-                    needNewHalfRects = true;
-                   // handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (rectSpeed * 1.5), rectangleLevel++);
+                    rectangle.x = 88;
+                    rectangle.y = (float) Math.random() * 550;
                 } else {
                     newRectsNeeded = true;
                 }
@@ -196,7 +200,8 @@ public class Game extends JFrame implements KeyListener{
                 g.drawRect((int) rectangle.x, (int) rectangle.y, size, size);
             } else {
                 if(rectangleLevel < 4) {
-                    handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (rectSpeed * 1.5), rectangleLevel++);
+                    rectangle.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
+                    rectangle.y = 0;
                 } else {
                     newRectsNeeded = true;
                 }
@@ -204,12 +209,19 @@ public class Game extends JFrame implements KeyListener{
 
         }
     }
+*/ArrayList rectangles = new ArrayList();
 
         private void draw() {
         //get canvas
-        Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
+
+            Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 
 
+            if(firstTime) {
+                rectangles.add(new Rectangle(new Vector(600, 0), new Vector(0, 3), new Vector(OBSTSIZE, OBSTSIZE), Color.green, true));
+                rectangles.add(new Rectangle(new Vector(5, 0), new Vector(3, 0), new Vector(OBSTSIZE, OBSTSIZE), Color.MAGENTA, false));
+                firstTime = false;
+            }
 
         //clear screen
 
@@ -217,6 +229,17 @@ public class Game extends JFrame implements KeyListener{
             //draw fps
            // if (clearSwitcher % 2 == 0)
                 g.clearRect(0, 0, WIDTH, HEIGHT);
+
+
+            for(int i = 0; i < rectangles.size(); i++) {
+                Rectangle rect = (Rectangle) rectangles.get(i);
+                rect.update((int)dt,rect, g, rect.movesVert);
+            }
+
+            //Rectangle rect = (Rectangle) rectangles.get(1);
+            //rect.update((int)dt, rect, g, rect.movesVert);
+
+
 
             g.setColor(Color.GREEN);
             g.drawString(Long.toString(fps), 10, 40);
@@ -228,60 +251,20 @@ public class Game extends JFrame implements KeyListener{
             g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
 
            // if(newRectsNeeded) {
-            handleRectangle(newRectsNeeded, OBSTSIZE, horizMovingRect1, g, false, OBSTSIZE, ENEMYSPEED, 1);
-            handleRectangle(newRectsNeeded, OBSTSIZE, vertMovingRect1, g, true, OBSTSIZE, ENEMYSPEED, 1);
-            handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (ENEMYSPEED * 1.5), 2);
+            //handleRectangle(newRectsNeeded, OBSTSIZE, horizMovingRect1, g, false, OBSTSIZE, ENEMYSPEED, 1);
+            //handleRectangle(newRectsNeeded, OBSTSIZE, vertMovingRect1, g, true, OBSTSIZE, ENEMYSPEED, 1);
+            //handleRectangle(true, OBSTSIZE / 2, new Vector(100, 100), g, true, (int) (OBSTSIZE / 1.5), (int) (ENEMYSPEED * 1.5), 2);
           //  newRectsNeeded = false;
               //  }
 
-
-
-            /*
-            if (horizMovingRect1.x + OBSTSIZE > WIDTH || horizMovingRect1.x < 0 || firstTime) {
-                horizMovingRect1.x = 88;
-                horizMovingRect1.y = (float) Math.random() * 550;
-                System.out.println("Horizontal rectangle created");
-            }
-            if (horizRectNeeded1) {
-                g.setColor(Color.GREEN);
-                g.drawRect((int) horizMovingRect1.x, (int) horizMovingRect1.y, OBSTSIZE, OBSTSIZE);
-            } else {
-                horizMovingRect1.x = 88;
-                horizMovingRect1.y = (float) Math.random() * 550;
-                horizRectNeeded1 = true;
-            }
-
-            if (vertMovingRect1.y + OBSTSIZE > HEIGHT || vertMovingRect1.y < 0 || firstTime) {
-                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50)+ 88;
-                vertMovingRect1.y = 0;
-                System.out.println("vertical rectangle created");
-            }
-            if (vertRectNeeded1) {
-                g.setColor(Color.MAGENTA);
-                g.fillRect((int) vertMovingRect1.x, (int) vertMovingRect1.y, OBSTSIZE, OBSTSIZE);
-            } else {
-                vertMovingRect1.x = (float) Math.random() * (WIDTH - 88 - 50) + 88;
-                vertMovingRect1.y = 0;
-                vertRectNeeded1 = true;
-            }
-            */
             firstTime = false;
             //release resources, show the buffer
             g.setColor(Color.cyan);
             g.fillRect(0,100,88,HEIGHT - 100);
         } else {
-
-            //g.setColor(Color.BLACK);
-            //g.fillRect(0, 0, 800, 600);
             g.setFont(new Font("", Font.PLAIN,75));
             g.setColor(Color.white);
             g.drawString("PAUSE", WIDTH / 2 - 175  , HEIGHT/ 2);
-
-            //g.setColor(Color.cyan);
-            //g.drawRect(100, 100, 100, 60);
-            //g.setFont(new Font("", Font.PLAIN,15));
-            //g.drawString("Press one to buy: ", 100, 150);
-
         }
         g.dispose();
         strategy.show();
