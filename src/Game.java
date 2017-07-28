@@ -1,14 +1,21 @@
+import sun.plugin2.ipc.windows.WindowsIPCFactory;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Game extends JFrame implements KeyListener{
     boolean firstTime = true;
     long numFrames = 0;
-    int spawnFrequency = 500; //lower is faster, should be a multiple of 10
+    int spawnFrequency = 500; //lower is faster, should be a multiple of
+    private boolean gameOver = false;
 
     boolean touchingWalls = false;
 
@@ -58,6 +65,8 @@ public class Game extends JFrame implements KeyListener{
         this.WIDTH = width;
         this.HEIGHT = height;
     }
+
+
 
     /*
      * init()
@@ -188,17 +197,28 @@ public class Game extends JFrame implements KeyListener{
         return (int)((nowMillis - this.createdMillis) / 1000);
     }
 
+    private BufferedImage createTexture(String path) {
+        try {
+            return ImageIO.read(new File(path));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
         private void draw() {
         //get canvas
             Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
             Vector killBox = new Vector(WIDTH / 2 - 40, HEIGHT / 2 - 40);
             if (
-                    characterPosition.x < killBox.x + 80 &&
+                    (characterPosition.x < killBox.x + 80 &&
                             characterPosition.x + characterSize > killBox.x &&
                             characterPosition.y < killBox.y + 80 &&
-                            characterPosition.y + characterSize > killBox.y
+                            characterPosition.y + characterSize > killBox.y)
                     )  {
-                System.out.println("Life lost");
+                inGame = false;
+                characterPosition.set((int)(Math.random() * WIDTH), (int)(Math.random() * HEIGHT));
             }
                 // coins+= coinMultiplier;
         if(inGame) {
@@ -212,15 +232,15 @@ public class Game extends JFrame implements KeyListener{
             for(int k = 150; k >= 5; k -=5) {
                 g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
             }
+            inGame = true;
             for(int i = 0; i < rectangles.size(); i++) {
                 Rectangle rect = (Rectangle) rectangles.get(i);
                 rect.update((int)dt,rect, g, rect.movesVert);
+                if(!checkCollision(characterPosition, rect, OBSTSIZE, characterSize)) {
+                    inGame = false;
+                    characterPosition.set((int)(Math.random() * WIDTH), (int)(Math.random() * HEIGHT));
+                }
             }
-
-            //Rectangle rect = (Rectangle) rectangles.get(1);
-            //rect.update((int)dt, rect, g, rect.movesVert);
-
-
 
             g.setColor(Color.GREEN);
             g.drawString(Long.toString(fps), 10, 40);

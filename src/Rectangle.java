@@ -30,10 +30,6 @@ public class Rectangle {
     boolean rectangleAlive = true;
     public void update(int dt, Rectangle rectangle, Graphics2D g, boolean movesVert) {
         if(!Game.checkCollision(new Vector(493, 360), rectangle, 50, 80)) {
-            for(Vector i = size; i.ix > 0; i.sub(new Vector(1,1))) {
-                size = i;
-                System.out.println("shrinking");
-            }
             rectangleAlive = false;
         }
         if(rectangleAlive) {
