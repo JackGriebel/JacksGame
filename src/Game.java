@@ -99,9 +99,10 @@ public class Game extends JFrame implements KeyListener{
      * updates all relevant game variables before the frame draws
      */
 
+
     public static boolean checkCollision(Vector characterPosition, Rectangle movingRect, int OBSTSIZE, int characterSize) {
         if (
-                characterPosition.x < movingRect.position.x + OBSTSIZE &&
+                        characterPosition.x < movingRect.position.x + OBSTSIZE &&
                         characterPosition.x + characterSize > movingRect.position.x &&
                         characterPosition.y < movingRect.position.y + OBSTSIZE &&
                         characterPosition.y + characterSize > movingRect.position.y
@@ -300,7 +301,6 @@ public class Game extends JFrame implements KeyListener{
                     coinMultiplier = coinStopper;
 
                 }
-                System.out.println("Not in game");
                 break;
         }
     }
