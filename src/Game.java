@@ -11,11 +11,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class Game extends JFrame implements KeyListener{
+public class Game extends JFrame implements KeyListener {
     boolean firstTime = true;
     long numFrames = 0;
     int spawnFrequency = 500; //lower is faster, should be a multiple of
     private boolean gameOver = false;
+    boolean restartActive = false;
+    int resetSwitcher = 0;
 
     boolean touchingWalls = false;
 
@@ -26,16 +28,34 @@ public class Game extends JFrame implements KeyListener{
     static int coinMultiplier = 1;
     int coinStopper = 0;
 
+    int upgradesPurchased1;
+    int upgradesPurchased2;
+    int upgradesPurchased3;
+    int upgradesPurchased4;
+    int upgradesPurchased5;
+    int upgradesPurchased6;
+    int upgradesPurchased7;
+
+
     boolean inGame = true;
 
     final int OBSTSIZE = 50;
 
     private int clearSwitcher = 0;
 
+    enum GAME_STATES {
+        MENU,
+        PLAY,
+        PAUSE,
+        GAMEOVER;
+    }
+
+    public GAME_STATES game_states = GAME_STATES.PLAY;
+
 
     //window vars
     private final int MAX_FPS; //maximum refresh rate
-    public  final int WIDTH; //window width
+    public final int WIDTH; //window width
     public final int HEIGHT; //window height
 
     //double buffer strategy
@@ -59,7 +79,7 @@ public class Game extends JFrame implements KeyListener{
     float friction = 0.998f;
     static int characterSize;
 
-    public Game(int width, int height, int fps){
+    public Game(int width, int height, int fps) {
         super("My Game");
         this.MAX_FPS = fps;
         this.WIDTH = width;
@@ -67,12 +87,11 @@ public class Game extends JFrame implements KeyListener{
     }
 
 
-
     /*
      * init()
      * initializes all variables needed before the window opens and refreshes
      */
-    void init(){
+    void init() {
         //initializes window characterSize
         setBounds(0, 0, WIDTH, HEIGHT);
         setResizable(false);
@@ -95,10 +114,10 @@ public class Game extends JFrame implements KeyListener{
         //set background window color
         setBackground(Color.DARK_GRAY);
 
-        characterPosition = new Vector(400,200);
+        characterPosition = new Vector(400, 200);
         characterVelocity = new Vector(0, 0);
-        angle = new Vector(0,0);
-        characterSize = 10;
+        angle = new Vector(0, 0);
+        characterSize = 100;
         push = 0;
     }
 
@@ -111,63 +130,96 @@ public class Game extends JFrame implements KeyListener{
 
     public static boolean checkCollision(Vector characterPosition, Rectangle movingRect, int OBSTSIZE, int characterSize) {
         if (
-                        characterPosition.x < movingRect.position.x + OBSTSIZE &&
+                characterPosition.x < movingRect.position.x + OBSTSIZE &&
                         characterPosition.x + characterSize > movingRect.position.x &&
                         characterPosition.y < movingRect.position.y + OBSTSIZE &&
                         characterPosition.y + characterSize > movingRect.position.y
                 ) {
             // coins+= coinMultiplier;
-             return false;
+            return false;
         } else {
             return true;
         }
     }
 
-    private void update(){
-        if(inGame) {
+    public void clearAll() {
+        rectangles.clear();
+        numFrames = 0;
+        spawnFrequency = 500;
+        coins = 0;
+        coinMultiplier = 1;
+        coinStopper = 0;
+        clearSwitcher = 0;
+    }
+
+    private void update() {
+        if (firstTime) {
+            game_states = GAME_STATES.PLAY;
+        }
+        if (inGame) {
             numFrames++;
+            switch (game_states) {
+                case MENU:
+                    break;
+                case PLAY:
+                    break;
+                case PAUSE:
+                    break;
+                case GAMEOVER:
+                    break;
+            }
             //update current fps
             fps = (int) (1f / dt);
             handelKeys();
             //bounce off walls
-            if (characterPosition.x + characterSize > WIDTH ) {
-                characterPosition.x-=1;
+            if (characterPosition.x + characterSize > WIDTH) {
+                characterPosition.x -= 1;
                 touchingWalls = true;
             }
-            if( characterPosition.x < 88) {
-                characterPosition.x+=1;
+            if (characterPosition.x < 88) {
+                characterPosition.x += 1;
                 touchingWalls = true;
             }
             if (characterPosition.y + characterSize > HEIGHT) {
                 characterPosition.y -= 1;
                 touchingWalls = true;
             }
-            if(characterPosition.y < 30)
-            {
+            if (characterPosition.y < 30) {
                 characterPosition.y += 1;
                 touchingWalls = true;
             }
 
-            if(getAgeInSeconds() == 10) {
+            if (getAgeInSeconds() == 10) {
                 spawnFrequency = 400;
+                System.out.println("Spawn frequency level 2");
             }
-            if(getAgeInSeconds() == 15) {
+            if (getAgeInSeconds() == 15) {
                 spawnFrequency = 300;
+                System.out.println("Spawn frequency level 3");
             }
-            if(getAgeInSeconds() == 20) {
+            if (getAgeInSeconds() == 20) {
                 spawnFrequency = 200;
+                System.out.println("Spawn frequency level 4");
             }
-            if(getAgeInSeconds() == 30) {
+            if (getAgeInSeconds() == 30) {
                 spawnFrequency = 100;
+                System.out.println("Spawn frequency level 5");
             }
-            if(getAgeInSeconds() == 40) {
+            if (getAgeInSeconds() == 40) {
                 spawnFrequency = 50;
+                System.out.println("Spawn frequency level 6");
             }
-            if(getAgeInSeconds() == 50) {
+            if (getAgeInSeconds() == 50) {
                 spawnFrequency = 25;
+                System.out.println("Spawn frequency level 7");
+            }
+            if (getAgeInSeconds() == 60) {
+                spawnFrequency = 10;
+                System.out.println("Spawn frequency level 7");
             }
             characterVelocity.add(Vector.mult(angle, dt));
             characterPosition.add(Vector.mult(characterVelocity, dt));
+            if (gameOver == true) game_states = GAME_STATES.GAMEOVER;
 
         }
 
@@ -178,23 +230,25 @@ public class Game extends JFrame implements KeyListener{
      * gets the canvas (Graphics2D) and draws all elements
      * disposes canvas and then flips the buffer
      */
-   ArrayList rectangles = new ArrayList();
-        public void createNewRectangle(Graphics2D g){
-            if(clearSwitcher % 2 == 0) {
-                rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534 + 88), 0), new Vector(0, ENEMYSPEED), new Vector(OBSTSIZE, OBSTSIZE), new Color((int) (Math.random() * 0x1000000)), true, (int) (Math.random() * 5) + 1));
-                clearSwitcher++;
-            } else {
-                rectangles.add(new Rectangle(new Vector(88, (int)(Math.random() * 750)), new Vector(3, 0), new Vector(OBSTSIZE, OBSTSIZE), new Color((int) (Math.random() * 0x1000000)), false, (int) (Math.random() * 5) + 1));
-                clearSwitcher++;
-            }
+    ArrayList rectangles = new ArrayList();
 
-
+    public void createNewRectangle(Graphics2D g) {
+        if (clearSwitcher % 2 == 0) {
+            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534 + 88), 0), new Vector(0, ENEMYSPEED), new Vector(OBSTSIZE, OBSTSIZE), new Color((int) (Math.random() * 0x1000000)), true, (int) (Math.random() * 5) + 1));
+            clearSwitcher++;
+        } else {
+            rectangles.add(new Rectangle(new Vector(88, (int) (Math.random() * 750)), new Vector(3, 0), new Vector(OBSTSIZE, OBSTSIZE), new Color((int) (Math.random() * 0x1000000)), false, (int) (Math.random() * 5) + 1));
+            clearSwitcher++;
         }
-    private final long createdMillis = System.currentTimeMillis();
 
-    public int getAgeInSeconds() {
-        long nowMillis = System.currentTimeMillis();
-        return (int)((nowMillis - this.createdMillis) / 1000);
+
+    }
+
+    private final long createdMillis = System.currentTimeMillis();
+    long nowMillis = System.currentTimeMillis();
+
+    public long getAgeInSeconds() {
+        return numFrames / 60;
     }
 
     private BufferedImage createTexture(String path) {
@@ -204,89 +258,162 @@ public class Game extends JFrame implements KeyListener{
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void drawShop() {
+        draw1();
+        draw2();
+        draw3();
+        draw4();
+        draw5();
+        draw7();
 
     }
 
-        private void draw() {
+    private void draw1() {
+        if(upgradesPurchased1 == 1) {
+            characterSize = 80;
+        } else if(upgradesPurchased1 == 2) {
+            characterSize = 60;
+        } else if(upgradesPurchased1 == 3) {
+            characterSize = 40;
+        } else if(upgradesPurchased1 == 4) {
+            characterSize = 20;
+        } else if(upgradesPurchased1 == 5) {
+            characterSize = 5;
+        }
+    }
+
+    private void draw2() {
+
+    }
+
+    private void draw3() {
+
+    }
+
+    private void draw4() {
+
+    }
+
+    private void draw5() {
+
+    }
+
+    private void draw6() {
+
+    }
+
+    private void draw7() {
+
+    }
+
+    private void draw() {
         //get canvas
-            Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-            Vector killBox = new Vector(WIDTH / 2 - 40, HEIGHT / 2 - 40);
-            if (
-                    (characterPosition.x < killBox.x + 80 &&
-                            characterPosition.x + characterSize > killBox.x &&
-                            characterPosition.y < killBox.y + 80 &&
-                            characterPosition.y + characterSize > killBox.y)
-                    )  {
-                inGame = false;
-                characterPosition.set((int)(Math.random() * WIDTH), (int)(Math.random() * HEIGHT));
-            }
-                // coins+= coinMultiplier;
-        if(inGame) {
-            g.clearRect(0, 0, WIDTH, HEIGHT);
-            if(numFrames % spawnFrequency == 0) {
-                createNewRectangle(g);
-            }
-            //g.setColor(Color.GREEN);
-           // g.fillRect(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
+        Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 
-            for(int k = 150; k >= 5; k -=5) {
-                g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
-            }
-            inGame = true;
-            for(int i = 0; i < rectangles.size(); i++) {
-                Rectangle rect = (Rectangle) rectangles.get(i);
-                rect.update((int)dt,rect, g, rect.movesVert);
-                if(!checkCollision(characterPosition, rect, OBSTSIZE, characterSize)) {
-                    inGame = false;
-                    characterPosition.set((int)(Math.random() * WIDTH), (int)(Math.random() * HEIGHT));
+        switch (game_states) {
+            case MENU:
+                break;
+            case PLAY:
+                drawShop();
+                System.out.println(getAgeInSeconds());
+                Vector killBox = new Vector(WIDTH / 2 - 40, HEIGHT / 2 - 40);
+                if (
+                        (characterPosition.x < killBox.x + 80 &&
+                                characterPosition.x + characterSize > killBox.x &&
+                                characterPosition.y < killBox.y + 80 &&
+                                characterPosition.y + characterSize > killBox.y)
+                        ) {
+                    gameOver = true;
                 }
-            }
+                g.clearRect(0, 0, WIDTH, HEIGHT);
+                if (numFrames % spawnFrequency == 0) {
+                    createNewRectangle(g);
+                }
+                if (numFrames % 60 == 0) {
+                    coins++;
+                }
+                //g.setColor(Color.GREEN);
+                // g.fillRect(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
-            g.setColor(Color.GREEN);
-            g.drawString(Long.toString(fps), 10, 40);
-            g.setColor(Color.yellow);
-            g.drawString("Coins: " + coins, 10, 60);
-            g.setColor(Color.cyan);
-            g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
-            firstTime = false;
-            //release resources, show the buffer
-            g.setColor(Color.cyan);
-            g.fillRect(0,100,88,HEIGHT - 100);
-        } else {
-            g.setFont(new Font("", Font.PLAIN,75));
-            g.setColor(Color.white);
-            g.drawString("PAUSE", WIDTH / 2 - 175  , HEIGHT/ 2);
+                for (int k = 150; k >= 5; k -= 5) {
+                    g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
+                }
+                inGame = true;
+                for (int i = 0; i < rectangles.size(); i++) {
+                    Rectangle rect = (Rectangle) rectangles.get(i);
+                    rect.update((int) dt, rect, g, rect.movesVert);
+                    if (!checkCollision(characterPosition, rect, (int) rect.size.x, characterSize)) {
+                        if (rect.rectangleAlive) {
+                            gameOver = true;
+                            //characterPosition.set((int) (Math.random() * WIDTH), (int) (Math.random() * HEIGHT));
+                        }
+                    }
+                }
+
+                g.setColor(Color.GREEN);
+                g.drawString(Long.toString(fps), 10, 40);
+                g.setColor(Color.yellow);
+                g.drawString("Coins: " + coins, 10, 60);
+                g.setColor(Color.cyan);
+                g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
+                firstTime = false;
+                //release resources, show the buffer
+                g.setColor(Color.BLACK);
+                g.fillRect(0, 100, 88, HEIGHT - 100);
+
+                break;
+            case PAUSE:
+                g.setFont(new Font("", Font.PLAIN, 75));
+                g.setColor(Color.white);
+                g.drawString("PAUSE", WIDTH / 2 - 175, HEIGHT / 2);
+                System.out.println("in pause");
+                break;
+            case GAMEOVER:
+                g.setColor(Color.black);
+                g.fillRect(0, 0, WIDTH, HEIGHT);
+                //g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\Game_Over.jpg"), 0,0, WIDTH, HEIGHT, null);
+                g.setFont(new Font("", Font.PLAIN, 75));
+                g.setColor(Color.WHITE);
+                g.drawString("Game Over", WIDTH / 2 - 200, HEIGHT / 2);
+                if (numFrames % 50 == 0) {
+                    resetSwitcher++;
+                }
+                if (resetSwitcher % 2 == 0) {
+                    g.setFont(new Font("", Font.PLAIN, 50));
+                    g.drawString("Press R to Restart", WIDTH / 2 - 207, HEIGHT / 2 + 100);
+                }
+                break;
         }
         g.dispose();
         strategy.show();
     }
 
 
-
-
     private void handelKeys() {
-        if(!touchingWalls) {
-        for(int i = 0; i < keys.size(); i++) {
-            switch(keys.get(i)) {
-                case KeyEvent.VK_W:
-                    characterPosition.add(new Vector(0, -PLAYERSPEED));
-                    break;
+        if (!touchingWalls) {
+            for (int i = 0; i < keys.size(); i++) {
+                switch (keys.get(i)) {
+                    case KeyEvent.VK_W:
+                        characterPosition.add(new Vector(0, -PLAYERSPEED));
+                        break;
 
-                case KeyEvent.VK_D:
-                    characterPosition.add(new Vector(PLAYERSPEED, 0));
-                    break;
-                case KeyEvent.VK_A:
-                    characterPosition.add(new Vector(-PLAYERSPEED, 0));
-                    break;
+                    case KeyEvent.VK_D:
+                        characterPosition.add(new Vector(PLAYERSPEED, 0));
+                        break;
+                    case KeyEvent.VK_A:
+                        characterPosition.add(new Vector(-PLAYERSPEED, 0));
+                        break;
 
-                case KeyEvent.VK_S:
-                    characterPosition.add(new Vector(0, PLAYERSPEED));
-                    break;
+                    case KeyEvent.VK_S:
+                        characterPosition.add(new Vector(0, PLAYERSPEED));
+                        break;
 
+                }
             }
-            }
 
-            } else {
+        } else {
             System.out.println("hit wall");
             touchingWalls = false;
         }
@@ -299,20 +426,20 @@ public class Game extends JFrame implements KeyListener{
 
     @Override
     public void keyPressed(KeyEvent keyEvent) {
-        if(!keys.contains(keyEvent.getKeyCode()))
+        if (!keys.contains(keyEvent.getKeyCode()))
             keys.add(keyEvent.getKeyCode());
     }
 
     @Override
     public void keyReleased(KeyEvent keyEvent) {
-        for(int i = keys.size() - 1; i>=0; i--) {
-            if(keyEvent.getKeyCode() == keys.get(i))
+        for (int i = keys.size() - 1; i >= 0; i--) {
+            if (keyEvent.getKeyCode() == keys.get(i))
                 keys.remove(i);
         }
         switch (keyEvent.getKeyCode()) {
 
             case KeyEvent.VK_ESCAPE:
-                if(inGame) {
+                if (inGame) {
                     inGame = false;
                     coinStopper = coinMultiplier;
                     coinMultiplier = 0;
@@ -321,6 +448,17 @@ public class Game extends JFrame implements KeyListener{
                     coinMultiplier = coinStopper;
 
                 }
+                break;
+            case KeyEvent.VK_R:
+                if (gameOver) {
+                    game_states = GAME_STATES.PLAY;
+                    clearAll();
+                    characterPosition.set((int) (Math.random() * WIDTH), (int) (Math.random() * HEIGHT));
+                    gameOver = false;
+                }
+                break;
+            case KeyEvent.VK_1:
+                upgradesPurchased1++;
                 break;
         }
     }
@@ -332,17 +470,15 @@ public class Game extends JFrame implements KeyListener{
             * updates all timing variables and then calls update() and draw()
             * dynamically sleeps the main thread to maintain angle framerate close to target fps
          */
-    public void run(){
+    public void run() {
         init();
-        while(isRunning) {
+        while (isRunning) {
             //new loop, clock the start
             startFrame = System.currentTimeMillis();
 
 
-
-
             //calculate delta time
-            dt = (float)(startFrame - lastFrame)/1000;
+            dt = (float) (startFrame - lastFrame) / 1000;
 
             //update lastFrame for next dt
             lastFrame = startFrame;
@@ -353,17 +489,21 @@ public class Game extends JFrame implements KeyListener{
 
             //dynamic thread sleep, only sleep the time we need to cap the framerate
             //rest = (max fps sleep time) - (time it took to execute this frame)
-            rest = (1000/MAX_FPS) - (System.currentTimeMillis() - startFrame);
-            if(rest > 0){ //if we stayed within frame "budget", sleep away the rest of it
-                try{ Thread.sleep(rest); }
-                catch (InterruptedException e){ e.printStackTrace(); }
+            rest = (1000 / MAX_FPS) - (System.currentTimeMillis() - startFrame);
+            if (rest > 0) { //if we stayed within frame "budget", sleep away the rest of it
+                try {
+                    Thread.sleep(rest);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
 
     }
+
     //entry point for application
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Game game = new Game(1066, 800, 60);
         game.run();
     }
