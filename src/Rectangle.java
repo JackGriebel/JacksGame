@@ -6,14 +6,16 @@ public class Rectangle {
     Color color;
     boolean movesVert;
     int rectSpeed;
+    boolean isBullet;
 
-    public Rectangle(Vector position, Vector speed, Vector size, Color color, boolean movesVert, int rectSpeed) {
+    public Rectangle(Vector position, Vector speed, Vector size, Color color, boolean movesVert, int rectSpeed, boolean isBullet) {
         this.position = position;
         this.speed = speed;
         this.size = size;
         this.color = color;
         this.movesVert = movesVert;
         this.rectSpeed = rectSpeed;
+        this.isBullet = isBullet;
     }
 
     public void draw(Graphics2D g) {
@@ -28,21 +30,21 @@ public class Rectangle {
      * @param movesVert - weather it moves verticle or horizontal
      */
     boolean rectangleAlive = true;
-    public void update(int dt, Rectangle rectangle, Graphics2D g, boolean movesVert) {
+    public void update(int dt, Rectangle rectangle, Graphics2D g, boolean movesVert, int obstSize) {
+        if(rectangle.isBullet) {
+            rectangle.position.add(rectangle.speed);
+            draw(g);
+        } else {
         if(!Game.checkCollision(new Vector(493, 360), rectangle, 50, 80)) {
             rectangleAlive = false;
         }
         if(rectangleAlive) {
             draw(g);
-        }
-
-        speed = Vector.sub(Game.characterPosition, rectangle.position);
-        speed.setMag(rectangle.rectSpeed);
-        rectangle.position.add(speed);
-        //System.out.println("Rectangle position is " + rectangle.position.x + " , " + rectangle.position.y);
-
-    }
-
+            speed = Vector.sub(Game.characterPosition, rectangle.position);
+            speed.setMag(rectangle.rectSpeed);
+            rectangle.position.add(speed);
+            rectangle.size = new Vector(obstSize, obstSize);
+        } } }
 
 
     public boolean newRectangleNeeded(Vector characterPosition, Rectangle rectangle, int OBSTSIZE, int characterSize) {
