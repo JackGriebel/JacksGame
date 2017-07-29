@@ -264,9 +264,6 @@ public class Game extends JFrame implements KeyListener {
 
     }
 
-    private final long createdMillis = System.currentTimeMillis();
-    long nowMillis = System.currentTimeMillis();
-
     public double getAgeInSeconds() {
         return numFrames / 60.0;
     }
@@ -386,19 +383,18 @@ public class Game extends JFrame implements KeyListener {
                 if(needRight) {
                     rectangles.add(shoot(1));
                     needRight = false;
-                    System.out.println("Make right bullet");
                 }
                 if(needUp) {
-                    shoot(2);
-                    needRight = false;
+                    rectangles.add(shoot(2));
+                    needUp = false;
                 }
                 if(needLeft) {
-                    shoot(3);
-                    needRight = false;
+                    rectangles.add(shoot(3));
+                    needLeft = false;
                 }
                 if(needDown) {
-                    shoot(4);
-                    needRight = false;
+                    rectangles.add(shoot(4));
+                    needDown = false;
                 }
                 if (
                         (characterPosition.x < killBox.x + 80 &&
@@ -424,6 +420,15 @@ public class Game extends JFrame implements KeyListener {
                 inGame = true;
                 for (int i = 0; i < rectangles.size(); i++) {
                     Rectangle rect = (Rectangle) rectangles.get(i);
+                    if(rect.isBullet) {
+                        for (int k = 0; k < rectangles.size(); k++) {
+                            Rectangle interceptRect = (Rectangle) rectangles.get(k);
+                            if(!checkCollision(rect.position, interceptRect, (int)interceptRect.size.x, (int)rect.size.x)) {
+                                rect.rectangleAlive = false;
+                                System.out.println("Rectangle killed");
+                            }
+                        }
+                    }
                     rect.update((int) dt, rect, g, rect.movesVert, obstSize);
                     if(!rect.isBullet) {
                         if(!checkCollision(characterPosition, rect, (int) rect.size.x, characterSize)) {
@@ -487,11 +492,23 @@ public class Game extends JFrame implements KeyListener {
         }
     }
     public Rectangle shoot(int direction) {
-        Vector spawnPos = characterPosition;
-        if(direction == 1) return new Rectangle(spawnPos, new Vector(bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 8, true);
-        else if(direction == 2) return new Rectangle(spawnPos, new Vector(0, -bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true);
-        else if(direction == 3) return new Rectangle(spawnPos, new Vector(-bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 0, true);
-        else return new Rectangle(spawnPos, new Vector(0, bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true);
+        Vector spawnPos;
+        if(direction == 1) {
+            spawnPos = new Vector(characterPosition.x + characterSize, (float)(characterPosition.y + (0.5 * characterSize)));
+            return new Rectangle(spawnPos, new Vector(bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 8, true);
+        }
+        else if(direction == 2) {
+            spawnPos = new Vector((float)(characterPosition.x + (0.5 * characterSize)), characterPosition.y );
+            return new Rectangle(spawnPos, new Vector(0, -bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true);
+        }
+        else if(direction == 3) {
+            spawnPos = new Vector(characterPosition.x , (float)(characterPosition.y + (0.5 * characterSize)));
+            return new Rectangle(spawnPos, new Vector(-bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 0, true);
+        }
+        else {
+            spawnPos = new Vector( (float)(characterPosition.x + (0.5 * characterSize)), characterPosition.y + characterSize);
+            return new Rectangle(spawnPos, new Vector(0, bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true);
+        }
 
     }
 
