@@ -1,3 +1,5 @@
+import org.w3c.dom.css.Rect;
+
 import java.awt.*;
 public class Rectangle {
     Vector position;
@@ -18,9 +20,10 @@ public class Rectangle {
         this.isBullet = isBullet;
     }
 
-    public void draw(Graphics2D g) {
+    public void draw(Graphics2D g, Rectangle rect) {
         g.setColor(color);
-        g.fillRect((int)position.x, (int)position.y, (int)size.x, (int)size.y);
+        g.drawImage(Game.createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\missile.png"), (int)rect.position.x, (int)rect.position.y, (int)rect.size.x, (int)rect.size.y, null);
+
     }
 
     /**
@@ -33,13 +36,13 @@ public class Rectangle {
     public void update(int dt, Rectangle rectangle, Graphics2D g, boolean movesVert, int obstSize) {
         if(rectangle.isBullet) {
             rectangle.position.add(rectangle.speed);
-            draw(g);
+            draw(g, rectangle);
         } else {
         if(!Game.checkCollision(new Vector(493, 360), rectangle, 50, 80)) {
             rectangleAlive = false;
         }
         if(rectangleAlive) {
-            draw(g);
+            draw(g, rectangle);
             speed = Vector.sub(Game.characterPosition, rectangle.position);
             speed.setMag(rectangle.rectSpeed);
             rectangle.position.add(speed);
