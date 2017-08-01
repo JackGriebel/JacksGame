@@ -17,6 +17,16 @@ public class Game extends JFrame implements KeyListener {
     boolean restartActive = false;
     int resetSwitcher = 0;
 
+    final int NUMSTARS = 200;
+    final int NUMGALAXIES = 10;
+    final int OGCHARACTERSIZE = 100;
+
+    int[] randomStarPosWidth = new int[NUMSTARS];
+    int[] randomStarPosHeight = new int[NUMSTARS];
+
+    int[] randomGalaxyPosWidth = new int[NUMGALAXIES];
+    int[] randomGalaxyPosHeight = new int[NUMGALAXIES];
+
     int direction = 1;
     boolean movingD = false;
     boolean movingW = true;
@@ -87,7 +97,7 @@ public class Game extends JFrame implements KeyListener {
     private long startFrame; //time since start of frame
     private int fps; //current fps
 
-    public static Vector characterPosition;
+    public static Vector characterPosition = new Vector(0,0);
     Vector characterVelocity;
     Vector angle;
     float push;
@@ -127,9 +137,7 @@ public class Game extends JFrame implements KeyListener {
         addKeyListener(this);
         setFocusable(true);
         //set background window color
-        setBackground(new Color(116, 219, 235));
 
-        characterPosition = new Vector(400, 200);
         characterVelocity = new Vector(0, 0);
         angle = new Vector(0, 0);
         characterSize = 100;
@@ -171,6 +179,9 @@ public class Game extends JFrame implements KeyListener {
         upgradesPurchased5 = 0;
         upgradesPurchased6 = 0;
         upgradesPurchased7 = 0;
+        obstSize = 50;
+        bullets = 0;
+        firstTime = true;
     }
 
     private void update() {
@@ -197,7 +208,7 @@ public class Game extends JFrame implements KeyListener {
                 characterPosition.x -= 1;
                 touchingWalls = true;
             }
-            if (characterPosition.x < 88) {
+            if (characterPosition.x < 0) {
                 characterPosition.x += 1;
                 touchingWalls = true;
             }
@@ -210,38 +221,38 @@ public class Game extends JFrame implements KeyListener {
                 touchingWalls = true;
             }
 
-            if (getAgeInSeconds() == 10) {
+            if (getAgeInSeconds() == 5) {
                 spawnFrequency = 400;
                 System.out.println("Spawn frequency level 2");
             }
-            if (getAgeInSeconds() == 15) {
+            if (getAgeInSeconds() == 10) {
                 spawnFrequency = 300;
                 coinMultiplier++;
                 System.out.println("Spawn frequency level 3");
             }
-            if (getAgeInSeconds() == 20) {
+            if (getAgeInSeconds() == 15) {
                 spawnFrequency = 200;
                 System.out.println("Spawn frequency level 4");
             }
-            if (getAgeInSeconds() == 30) {
+            if (getAgeInSeconds() == 20) {
                 spawnFrequency = 100;
                 coinMultiplier++;
                 System.out.println("Spawn frequency level 5");
             }
-            if (getAgeInSeconds() == 40) {
+            if (getAgeInSeconds() == 30) {
                 spawnFrequency = 50;
                 System.out.println("Spawn frequency level 6");
             }
-            if (getAgeInSeconds() == 50) {
+            if (getAgeInSeconds() == 40) {
                 spawnFrequency = 25;
                 coinMultiplier++;
                 System.out.println("Spawn frequency level 7");
             }
-            if (getAgeInSeconds() == 60) {
+            if (getAgeInSeconds() == 50) {
                 spawnFrequency = 10;
                 System.out.println("Spawn frequency level 8");
             }
-            if (getAgeInSeconds() == 80) {
+            if (getAgeInSeconds() == 60) {
                 spawnFrequency = 5;
                 coinMultiplier++;
                 System.out.println("MAX MAX MAX Spawn frequency level 9 MAX MAX MAX");
@@ -270,16 +281,16 @@ public class Game extends JFrame implements KeyListener {
         colors.add(new Color(249, 255, 0));
         colors.add(new Color(67, 255, 82));
         colors.add(new Color(255, 0, 209));
-        colors.add(new Color(0, 0, 0));
+        //colors.add(new Color(0, 0, 0));
         colors.add(new Color(0, 145, 255));
         colors.add(new Color(136, 0, 255));
         colors.add(new Color(255, 194, 0));
         int arrayPicker = (int) (Math.random() * colors.size());
         if (clearSwitcher % 2 == 0) {
-            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534 + 88), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false));
+            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false));
             clearSwitcher++;
         } else {
-            rectangles.add(new Rectangle(new Vector(88, (int) (Math.random() * 750)), new Vector(3, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false));
+            rectangles.add(new Rectangle(new Vector(0, (int) (Math.random() * 750)), new Vector(3, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false));
             clearSwitcher++;
         }
 
@@ -290,7 +301,7 @@ public class Game extends JFrame implements KeyListener {
         return numFrames / 60.0;
     }
 
-   static BufferedImage createTexture(String path) {
+    static BufferedImage createTexture(String path) {
         try {
             return ImageIO.read(new File(path));
         } catch (IOException e) {
@@ -332,9 +343,11 @@ public class Game extends JFrame implements KeyListener {
         }
         if (upgradeType == 4) {
             if (coins >= checkCoinPrice(upgradesPurchased4) && upgradesPurchased4 < 4) {
-                coins -= checkCoinPrice(upgradesPurchased4);
-                upgradesPurchased4++;
-                obstSize -= 10;
+                if(obstSize > 10) {
+                    coins -= checkCoinPrice(upgradesPurchased4);
+                    upgradesPurchased4++;
+                    obstSize -= 10;
+                }
             }
         }
         if (upgradeType == 5) {
@@ -364,11 +377,11 @@ public class Game extends JFrame implements KeyListener {
 
     private void buy1() {
         if (upgradesPurchased1 == 0) characterSize = 100;
-        else if (upgradesPurchased1 == 1) characterSize -= 20;
-        else if (upgradesPurchased1 == 2) characterSize -= 20;
-        else if (upgradesPurchased1 == 3) characterSize -= 20;
-        else if (upgradesPurchased1 == 4) characterSize -= 20;
-        else if (upgradesPurchased1 == 5) characterSize -= 20;
+        else if (upgradesPurchased1 == 1) characterSize = OGCHARACTERSIZE - 20;
+        else if (upgradesPurchased1 == 2) characterSize = OGCHARACTERSIZE - 40;
+        else if (upgradesPurchased1 == 3) characterSize = OGCHARACTERSIZE - 60;
+        else if (upgradesPurchased1 == 4) characterSize = OGCHARACTERSIZE - 80;
+        else if (upgradesPurchased1 == 5) characterSize = OGCHARACTERSIZE - 90;
 
     }
 
@@ -397,13 +410,6 @@ public class Game extends JFrame implements KeyListener {
 
     }
 
-    private void draw1(Graphics2D g) {
-        g.setColor(Color.white);
-        g.drawString("Press 1 for ", 5, 120);
-        g.drawString("Size level " + (upgradesPurchased1 + 1), 5, 135);
-        g.drawString("Cost- " + checkCoinPrice(upgradesPurchased1) + " coins", 5, 150);
-    }
-
     private void killDirections() {
         if (movingD || movingW || movingA || movingS) {
             movingD = false;
@@ -416,8 +422,9 @@ public class Game extends JFrame implements KeyListener {
     private void draw() {
         //get canvas
         Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-
-        draw1(g);
+        if(firstTime) {
+            characterPosition = new Vector(WIDTH - 100, HEIGHT - 200);
+        }
         g.setColor(Color.black);
         switch (game_states) {
             case MENU:
@@ -450,8 +457,11 @@ public class Game extends JFrame implements KeyListener {
                     gameOver = true;
                 }
                 g.clearRect(0, 0, WIDTH, HEIGHT);
-                g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\sky.png"), 100, 100, WIDTH / 3, HEIGHT / 3, null);
-                g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\sky.png"), (int) (WIDTH * 0.5), (int) (HEIGHT * 0.5), WIDTH / 2, HEIGHT / 2, null);
+                if(firstTime) {
+                    createNewRectangle(g);
+                    createNewRectangle(g);
+                    createNewRectangle(g);
+                }
                 if (numFrames % spawnFrequency == 0) {
                     createNewRectangle(g);
                 }
@@ -462,6 +472,7 @@ public class Game extends JFrame implements KeyListener {
                 // g.fillRect(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
                 for (int k = 150; k >= 5; k -= 5) {
+                    g.setColor(Color.white);
                     g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
                 }
                 inGame = true;
@@ -495,39 +506,36 @@ public class Game extends JFrame implements KeyListener {
                     g.setColor(new Color(255, 255, 255));
                     g.drawString("Bullets " + bullets, 30, 40);
                 }
-                System.out.println(fps);
-                if (movingW && movingD) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeUpRight.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
-                    playerSpeed /= 1.2;
-                } else if (movingW && movingA) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeUpLeft.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
-                    playerSpeed /= 1.2;
-                } else if (movingS && movingA) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeDownLeft.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
-                    playerSpeed /= 1.2;
-                } else if (movingS && movingD) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeDownRight.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
-                    playerSpeed /= 1.2;
-                } else if (movingD || lastMoved.equals("d")) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeRight.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
-                } else if (movingW || lastMoved.equals("w")) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeUp.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
+                g.setColor(Color.white);
 
-                } else if (movingA || lastMoved.equals("a")) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeLeft.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
-
-                } else if (movingS || lastMoved.equals("s")) {
-                    g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\ww2planeDown.png"), characterPosition.ix, characterPosition.iy, characterSize, characterSize, null);
+                g.drawRect((int) characterPosition.x, (int) characterPosition.y, characterSize, characterSize);
+                for (int i = 0; i < NUMSTARS; i++) {
+                    g.fillRect(randomStarPosWidth[i], randomStarPosHeight[i], 2, 2);
                 }
+                /*
+                /////////////////////makes elongated polygon
+                int polyYPos = 200;
+                int polyXPos = 150;
+                int xPoly[] = {polyXPos, polyXPos + 50, polyXPos + 100, polyXPos + 50 };
+                int yPoly[] = {polyYPos, polyYPos + 100, polyYPos , polyYPos - 100};
+                g.fillPolygon(xPoly, yPoly, xPoly.length);
+
+                /////////////////////makes "glow" effect
+                int glowSizer = 0;
+                int opacity = 255;
+                for(int i = 0; i <= 6; i++) {
+                    g.setColor(new Color(255,255,255, opacity));
+                    glowSizer-=2;
+                    g.drawRect((int)(characterPosition.x + (glowSizer / 2)), (int)(characterPosition.y + (glowSizer / 2)), characterSize - glowSizer, characterSize - glowSizer);
+                    opacity -=40;
+                }
+                */
                 killDirections();
 
                 // g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
                 firstTime = false;
                 //release resources, show the buffer
                 g.setColor(Color.BLACK);
-                g.fillRect(0, 100, 88, HEIGHT - 100);
-                draw1(g);
-
                 break;
             case PAUSE:
                 g.setFont(new Font("", Font.PLAIN, 75));
@@ -538,7 +546,6 @@ public class Game extends JFrame implements KeyListener {
             case GAMEOVER:
                 g.setColor(Color.black);
                 g.fillRect(0, 0, WIDTH, HEIGHT);
-                //g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\Game_Over.jpg"), 0,0, WIDTH, HEIGHT, null);
                 g.setFont(new Font("", Font.PLAIN, 75));
                 g.setColor(Color.WHITE);
                 g.drawString("Game Over", WIDTH / 2 - 200, HEIGHT / 2);
@@ -731,6 +738,19 @@ public class Game extends JFrame implements KeyListener {
             * dynamically sleeps the main thread to maintain angle framerate close to target fps
          */
     public void run() {
+        setBackground(Color.black);
+        for (int i = 0; i < NUMSTARS; i++) {
+            randomStarPosHeight[i] = (int) (Math.random() * HEIGHT);
+        }
+        for (int i = 0; i < NUMSTARS; i++) {
+            randomStarPosWidth[i] = (int) (Math.random() * WIDTH);
+        }
+        for (int i = 0; i < NUMGALAXIES; i++) {
+            randomGalaxyPosHeight[i] = (int) (Math.random() * HEIGHT);
+        }
+        for (int i = 0; i < NUMGALAXIES; i++) {
+            randomGalaxyPosWidth[i] = (int) (Math.random() * WIDTH);
+        }
         init();
         while (isRunning) {
             //new loop, clock the start

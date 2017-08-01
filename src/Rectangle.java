@@ -22,8 +22,7 @@ public class Rectangle {
 
     public void draw(Graphics2D g, Rectangle rect) {
         g.setColor(color);
-        g.drawImage(Game.createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\missile.png"), (int)rect.position.x, (int)rect.position.y, (int)rect.size.x, (int)rect.size.y, null);
-
+        g.drawRect((int)rect.position.x, (int)rect.position.y, (int)rect.size.x, (int)rect.size.y);
     }
 
     /**
@@ -67,7 +66,7 @@ public class Rectangle {
                 rectangle.position.x = 88;
                 rectangle.position.y =  (int)(Math.random() * 550);
             } else {
-                rectangle.position.x = (int) (Math.random() * (WIDTH - 88 - 50) + 88);
+                rectangle.position.x = (int) (Math.random() * (WIDTH- 50) + 88);
                 rectangle.position.y = 0;
                 System.out.println("Vert Rect Moved");
             }
