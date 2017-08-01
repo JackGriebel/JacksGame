@@ -20,12 +20,13 @@ public class Game extends JFrame implements KeyListener {
     final int NUMSTARS = 200;
     final int NUMGALAXIES = 10;
     final int OGCHARACTERSIZE = 100;
-
     int[] randomStarPosWidth = new int[NUMSTARS];
     int[] randomStarPosHeight = new int[NUMSTARS];
 
     int[] randomGalaxyPosWidth = new int[NUMGALAXIES];
     int[] randomGalaxyPosHeight = new int[NUMGALAXIES];
+
+    int rectType = 0;
 
     int direction = 1;
     boolean movingD = false;
@@ -222,38 +223,38 @@ public class Game extends JFrame implements KeyListener {
             }
 
             if (getAgeInSeconds() == 5) {
-                spawnFrequency = 400;
+                spawnFrequency = 300;
                 System.out.println("Spawn frequency level 2");
             }
             if (getAgeInSeconds() == 10) {
-                spawnFrequency = 300;
+                spawnFrequency = 200;
                 coinMultiplier++;
                 System.out.println("Spawn frequency level 3");
             }
             if (getAgeInSeconds() == 15) {
-                spawnFrequency = 200;
+                spawnFrequency = 100;
                 System.out.println("Spawn frequency level 4");
             }
             if (getAgeInSeconds() == 20) {
-                spawnFrequency = 100;
+                spawnFrequency = 50;
                 coinMultiplier++;
                 System.out.println("Spawn frequency level 5");
             }
             if (getAgeInSeconds() == 30) {
-                spawnFrequency = 50;
+                spawnFrequency = 25;
                 System.out.println("Spawn frequency level 6");
             }
             if (getAgeInSeconds() == 40) {
-                spawnFrequency = 25;
+                spawnFrequency = 10;
                 coinMultiplier++;
                 System.out.println("Spawn frequency level 7");
             }
             if (getAgeInSeconds() == 50) {
-                spawnFrequency = 10;
+                spawnFrequency = 5;
                 System.out.println("Spawn frequency level 8");
             }
             if (getAgeInSeconds() == 60) {
-                spawnFrequency = 5;
+                spawnFrequency = 1;
                 coinMultiplier++;
                 System.out.println("MAX MAX MAX Spawn frequency level 9 MAX MAX MAX");
             }
@@ -287,11 +288,16 @@ public class Game extends JFrame implements KeyListener {
         colors.add(new Color(255, 194, 0));
         int arrayPicker = (int) (Math.random() * colors.size());
         if (clearSwitcher % 2 == 0) {
-            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false));
+            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false, rectType));
+            rectType++;
             clearSwitcher++;
         } else {
-            rectangles.add(new Rectangle(new Vector(0, (int) (Math.random() * 750)), new Vector(3, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false));
+            rectangles.add(new Rectangle(new Vector(0, (int) (Math.random() * 750)), new Vector(3, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false, rectType));
+            rectType++;
             clearSwitcher++;
+        }
+        if(rectType > 4) {
+            rectType = 0;
         }
 
 
@@ -513,7 +519,19 @@ public class Game extends JFrame implements KeyListener {
                     g.fillRect(randomStarPosWidth[i], randomStarPosHeight[i], 2, 2);
                 }
                 /*
-                /////////////////////makes elongated polygon
+                /////////////////////makes galaxy things
+                for(int i = 0; i < NUMGALAXIES; i++) {
+                    int xPos = randomGalaxyPosWidth[i];
+                    int yPos = randomGalaxyPosHeight[i];
+                    for(int angle = 0; angle < 360; angle+=45) {
+                        g.translate(xPos, yPos);
+                            g.rotate(angle);
+                                g.fillRect(0,0,20,2);
+                            g.rotate(-angle);
+                        g.translate(-xPos, -yPos);
+                    }
+                }
+                /////////////////////makes elongated polygon (diamond)
                 int polyYPos = 200;
                 int polyXPos = 150;
                 int xPoly[] = {polyXPos, polyXPos + 50, polyXPos + 100, polyXPos + 50 };
@@ -581,16 +599,16 @@ public class Game extends JFrame implements KeyListener {
         Vector spawnPos;
         if (direction == 1) {
             spawnPos = new Vector(characterPosition.x + characterSize, (float) (characterPosition.y + (0.5 * characterSize)));
-            return new Rectangle(spawnPos, new Vector(bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 8, true);
+            return new Rectangle(spawnPos, new Vector(bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 8, true, 100);
         } else if (direction == 2) {
             spawnPos = new Vector((float) (characterPosition.x + (0.5 * characterSize)), characterPosition.y);
-            return new Rectangle(spawnPos, new Vector(0, -bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true);
+            return new Rectangle(spawnPos, new Vector(0, -bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true, 100);
         } else if (direction == 3) {
             spawnPos = new Vector(characterPosition.x, (float) (characterPosition.y + (0.5 * characterSize)));
-            return new Rectangle(spawnPos, new Vector(-bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 0, true);
+            return new Rectangle(spawnPos, new Vector(-bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 0, true, 100);
         } else {
             spawnPos = new Vector((float) (characterPosition.x + (0.5 * characterSize)), characterPosition.y + characterSize);
-            return new Rectangle(spawnPos, new Vector(0, bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true);
+            return new Rectangle(spawnPos, new Vector(0, bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true, 100);
         }
 
     }
@@ -734,7 +752,7 @@ public class Game extends JFrame implements KeyListener {
          * run()
          * calls init() to initialize variables
          * loops using isRunning
-            * updates all timing variables and then calls update() and draw ()
+            * updates all timing variables and then calls update () and draw ()
             * dynamically sleeps the main thread to maintain angle framerate close to target fps
          */
     public void run() {

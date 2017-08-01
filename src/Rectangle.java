@@ -9,8 +9,10 @@ public class Rectangle {
     boolean movesVert;
     int rectSpeed;
     boolean isBullet;
+    int rectType;
 
-    public Rectangle(Vector position, Vector speed, Vector size, Color color, boolean movesVert, int rectSpeed, boolean isBullet) {
+
+    public Rectangle(Vector position, Vector speed, Vector size, Color color, boolean movesVert, int rectSpeed, boolean isBullet, int rectType) {
         this.position = position;
         this.speed = speed;
         this.size = size;
@@ -18,11 +20,33 @@ public class Rectangle {
         this.movesVert = movesVert;
         this.rectSpeed = rectSpeed;
         this.isBullet = isBullet;
+        this.rectType = rectType;
     }
-
     public void draw(Graphics2D g, Rectangle rect) {
         g.setColor(color);
         g.drawRect((int)rect.position.x, (int)rect.position.y, (int)rect.size.x, (int)rect.size.y);
+        if(!rect.isBullet) {
+            if(rect.rectType == 0) {
+                int xPoly[] = {(int) rect.position.x, (int) (rect.position.x + (rect.size.x / 2)), (int) (rect.position.x + (rect.size.x)), (int) (rect.position.x + (rect.size.x / 2))};
+                int yPoly[] = {(int) (rect.position.y + (rect.size.x / 2)), (int) (rect.position.y + (rect.size.x)), (int) (rect.position.y + (rect.size.x / 2)), (int) (rect.position.y)};
+                g.drawPolygon(xPoly, yPoly, xPoly.length);
+            } else if(rect.rectType == 1) {
+                g.drawOval((int)rect.position.x,(int) rect.position.y, (int)rect.size.x, (int)rect.size.y);
+            } else if(rect.rectType == 2) {
+                int rectSmallFactor = 20;
+                g.drawRect((int)(rect.position.x + ((rect.size.x - rectSmallFactor * 1.5) / 2)), (int)(rect.position.y + ((rect.size.x - rectSmallFactor * 1.5) / 2)), (int)(rect.size.x - rectSmallFactor), (int)(rect.size.x - rectSmallFactor));
+            } else if (rect.rectType == 3) {
+                int xPoly[] = {(int) rect.position.x, (int) (rect.position.x + rect.size.x), (int)(rect.position.x + rect.size.x / 2)};
+                int yPoly[] = {(int) (rect.position.y + rect.size.y), (int) (rect.position.y + rect.size.y),(int)(rect.position.y) };
+                g.drawPolygon(xPoly, yPoly, xPoly.length);
+            } else if(rect.rectType == 4) {
+                int smallRectSize = 20;
+                g.drawRect((int)rect.position.x, (int)rect.position.y, smallRectSize, smallRectSize);
+                g.drawRect((int)(rect.position.x), (int)(rect.position.y + rect.size.x - smallRectSize), smallRectSize, smallRectSize);
+                g.drawRect((int)(rect.position.x + rect.size.x - smallRectSize), (int)rect.position.y, smallRectSize, smallRectSize);
+                g.drawRect((int)(rect.position.x + rect.size.x - smallRectSize), (int)(rect.position.y + rect.size.x - smallRectSize), smallRectSize, smallRectSize);
+            }
+        }
     }
 
     /**
