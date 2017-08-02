@@ -17,6 +17,8 @@ public class Game extends JFrame implements KeyListener {
     boolean restartActive = false;
     int resetSwitcher = 0;
 
+    boolean trueFirstTime = true;
+
     final int NUMSTARS = 200;
     final int NUMGALAXIES = 10;
     final int OGCHARACTERSIZE = 100;
@@ -100,12 +102,12 @@ public class Game extends JFrame implements KeyListener {
     private long startFrame; //time since start of frame
     private int fps; //current fps
 
-    public static Vector characterPosition = new Vector(0,0);
+    public static Vector characterPosition = new Vector(0, 0);
     Vector characterVelocity;
     Vector angle;
     float push;
     float friction = 0.998f;
-    static int characterSize;
+    int characterSize;
 
     public Game(int width, int height, int fps) {
         super("My Game");
@@ -183,11 +185,30 @@ public class Game extends JFrame implements KeyListener {
         upgradesPurchased6 = 0;
         upgradesPurchased7 = 0;
         obstSize = 50;
-        bullets = 0;
+        bullets = 10;
         firstTime = true;
     }
 
     private void update() {
+        if (inPause) {
+            if (characterPosition.x + characterSize > WIDTH - 40) {
+                characterPosition.x -= 1;
+                touchingWalls = true;
+            }
+            if (characterPosition.x < 450) {
+                characterPosition.x += 1;
+                touchingWalls = true;
+            }
+            if (characterPosition.y + characterSize > HEIGHT - 150) {
+                characterPosition.y -= 1;
+                touchingWalls = true;
+            }
+            if (characterPosition.y < 100) {
+                characterPosition.y += 1;
+                touchingWalls = true;
+            }
+            handelKeys();
+        }
         if (inGame) {
             numFrames++;
 
@@ -285,7 +306,7 @@ public class Game extends JFrame implements KeyListener {
             rectType++;
             clearSwitcher++;
         }
-        if(rectType > 4) {
+        if (rectType > 4) {
             rectType = 0;
         }
 
@@ -338,7 +359,7 @@ public class Game extends JFrame implements KeyListener {
         }
         if (upgradeType == 4) {
             if (coins >= checkCoinPrice(upgradesPurchased4) && upgradesPurchased4 < 4) {
-                if(obstSize > 10) {
+                if (obstSize > 10) {
                     coins -= checkCoinPrice(upgradesPurchased4);
                     upgradesPurchased4++;
                     obstSize -= 10;
@@ -417,10 +438,14 @@ public class Game extends JFrame implements KeyListener {
     private void draw() {
         //get canvas
         Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
-        if(firstTime) {
-            characterPosition = new Vector(WIDTH - 100, HEIGHT - 200);
+        if (firstTime) {
+            characterPosition = new Vector(WIDTH - 200, HEIGHT - 200);
         }
-        if(inGame) {
+        if (trueFirstTime) {
+            characterPosition = new Vector(WIDTH - 200, HEIGHT - 400);
+            trueFirstTime = false;
+        }
+        if (inGame) {
             drawShop();
             Vector killBox = new Vector(WIDTH / 2 - 40, HEIGHT / 2 - 40);
             if (
@@ -432,10 +457,9 @@ public class Game extends JFrame implements KeyListener {
                 gameOver = true;
             }
         }
-            g.clearRect(0, 0, WIDTH, HEIGHT);
-        if(inGame) {
+        g.clearRect(0, 0, WIDTH, HEIGHT);
+        if (inGame) {
             if (firstTime) {
-                createNewRectangle(g);
                 createNewRectangle(g);
                 createNewRectangle(g);
             }
@@ -452,6 +476,52 @@ public class Game extends JFrame implements KeyListener {
                 g.setColor(Color.white);
                 g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
             }
+        }
+
+
+        g.setColor(Color.GREEN);
+        g.drawString(Long.toString(fps), 10, 40);
+        g.setColor(Color.yellow);
+        g.drawString("Coins: " + coins, 10, 60);
+        if (upgradesPurchased5 > 0) {
+            g.setColor(Color.white);
+            g.drawString("Bullets " + bullets, 30, 40);
+        }
+        g.setColor(Color.white);
+        for (int i = 0; i < NUMSTARS; i++) {
+            g.fillRect(randomStarPosWidth[i], randomStarPosHeight[i], 2, 2);
+        }
+
+
+        killDirections();
+
+        // g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
+        firstTime = false;
+        //release resources, show the buffer
+        g.setColor(Color.BLACK);
+        if (gameOver) {
+            g.setColor(Color.black);
+            g.fillRect(0, 0, WIDTH, HEIGHT);
+            g.setFont(new Font("", Font.PLAIN, 75));
+            g.setColor(Color.WHITE);
+            g.drawString("Game Over", WIDTH / 2 - 200, HEIGHT / 2);
+            if (numFrames % 50 == 0) {
+                resetSwitcher++;
+            }
+            if (resetSwitcher % 2 == 0) {
+                g.setFont(new Font("", Font.PLAIN, 50));
+                g.drawString("Press R to Restart", WIDTH / 2 - 207, HEIGHT / 2 + 100);
+            }
+        }
+        if (inPause) {
+            //C:\Users\IGMAdmin\JacksGame\images\menu.png
+            g.drawImage(createTexture("J:\\JacksGame\\JacksGame\\JacksGame\\images\\menu.png"), 0, 25, WIDTH, HEIGHT, null);
+            g.setColor(Color.white);
+            g.drawRect(450, 100, 576, 550);
+            g.setColor(Color.yellow);
+            g.drawString("Coins " + coins, 460, 120);
+        }
+        if (inGame || inPause) {
             for (int i = 0; i < rectangles.size(); i++) {
                 Rectangle rect = (Rectangle) rectangles.get(i);
                 for (int k = 0; k < rectangles.size(); k++) {
@@ -459,7 +529,6 @@ public class Game extends JFrame implements KeyListener {
                     if (interceptRect.isBullet) {
                         if (!checkCollision(rect.position, interceptRect, (int) interceptRect.size.x, (int) rect.size.x)) {
                             rect.rectangleAlive = false;
-                            System.out.println("Rectangle killed");
                         }
                     }
                 }
@@ -474,51 +543,17 @@ public class Game extends JFrame implements KeyListener {
                 }
             }
 
-            g.setColor(Color.GREEN);
-            g.drawString(Long.toString(fps), 10, 40);
-            g.setColor(Color.yellow);
-            g.drawString("Coins: " + coins, 10, 60);
-            if (upgradesPurchased5 > 0) {
-                g.setColor(new Color(255, 255, 255));
-                g.drawString("Bullets " + bullets, 30, 40);
-            }
-            g.setColor(Color.white);
-            for (int i = 0; i < NUMSTARS; i++) {
-                g.fillRect(randomStarPosWidth[i], randomStarPosHeight[i], 2, 2);
-            }
-        }
-
-            killDirections();
-
-            // g.fillRect(characterPosition.ix, characterPosition.iy, characterSize, characterSize);
-            firstTime = false;
-            //release resources, show the buffer
-            g.setColor(Color.BLACK);
-            if(gameOver) {
-                g.setColor(Color.black);
-                g.fillRect(0, 0, WIDTH, HEIGHT);
-                g.setFont(new Font("", Font.PLAIN, 75));
-                g.setColor(Color.WHITE);
-                g.drawString("Game Over", WIDTH / 2 - 200, HEIGHT / 2);
-                if (numFrames % 50 == 0) {
-                    resetSwitcher++;
-                }
-                if (resetSwitcher % 2 == 0) {
-                    g.setFont(new Font("", Font.PLAIN, 50));
-                    g.drawString("Press R to Restart", WIDTH / 2 - 207, HEIGHT / 2 + 100);
-                }
-        }
-        if(inPause) {
-            g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\menu.png"), 0, 25, WIDTH, HEIGHT, null);
         }
         g.setColor(Color.white);
-        if((inGame || inPause) && !gameOver) {
+        if ((inGame || inPause) && !gameOver) {
             g.drawRect((int) characterPosition.x, (int) characterPosition.y, characterSize, characterSize);
+            System.out.println("Character size is: " + characterSize);
         }
 
-        if(inGame || inPause) {
+        if (inGame || inPause) {
             if (needRight) {
                 rectangles.add(shoot(1));
+                System.out.println("Shot");
                 needRight = false;
             }
             if (needUp) {
@@ -633,13 +668,13 @@ public class Game extends JFrame implements KeyListener {
 
             case KeyEvent.VK_ESCAPE:
                 clearAll();
-                    if(inGame) {
-                        inGame = false;
-                        inPause = true;
-                    } else if(inPause) {
-                        inPause = false;
-                        inGame = true;
-                    }
+                if (inGame) {
+                    inGame = false;
+                    inPause = true;
+                } else if (inPause) {
+                    inPause = false;
+                    inGame = true;
+                }
 
                 break;
             case KeyEvent.VK_R:
@@ -658,10 +693,10 @@ public class Game extends JFrame implements KeyListener {
                 purchaseUpgrades(3);
                 break;
             case KeyEvent.VK_4:
-                purchaseUpgrades(4);
+                purchaseUpgrades(5);
                 break;
             case KeyEvent.VK_5:
-                purchaseUpgrades(5);
+                purchaseUpgrades(0); //this just does nothing
                 break;
             case KeyEvent.VK_6:
                 purchaseUpgrades(6);
