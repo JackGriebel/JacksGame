@@ -10,9 +10,10 @@ public class Rectangle {
     int rectSpeed;
     boolean isBullet;
     int rectType;
+    int age;
 
 
-    public Rectangle(Vector position, Vector speed, Vector size, Color color, boolean movesVert, int rectSpeed, boolean isBullet, int rectType) {
+    public Rectangle(Vector position, Vector speed, Vector size, Color color, boolean movesVert, int rectSpeed, boolean isBullet, int rectType, int age) {
         this.position = position;
         this.speed = speed;
         this.size = size;
@@ -21,6 +22,7 @@ public class Rectangle {
         this.rectSpeed = rectSpeed;
         this.isBullet = isBullet;
         this.rectType = rectType;
+        this.age = age;
     }
     public void draw(Graphics2D g, Rectangle rect) {
         g.setColor(color);
@@ -57,10 +59,12 @@ public class Rectangle {
      */
     boolean rectangleAlive = true;
     public void update(int dt, Rectangle rectangle, Graphics2D g, boolean movesVert, int obstSize) {
+        //moves bullets free of collision
         if(rectangle.isBullet) {
             rectangle.position.add(rectangle.speed);
             draw(g, rectangle);
         } else {
+            //checks void collision
         if(!Game.checkCollision(new Vector(493, 360), rectangle, 50, 80)) {
             rectangleAlive = false;
         }
