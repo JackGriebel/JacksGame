@@ -69,8 +69,8 @@ public class Rectangle {
                 draw(g, rectangle);
             }
         } else {
-            //checks void collision
-        if(!Game.checkCollision(new Vector(493, 360), rectangle, 50, 80)) {
+            //checks void collision <--- useful to future me
+        if(!Game.checkCollision(new Vector(820, 455), rectangle, 50, 80)) {
             rectangleAlive = false;
         }
         if(rectangleAlive) {

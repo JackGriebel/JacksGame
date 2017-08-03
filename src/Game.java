@@ -1,5 +1,3 @@
-import org.w3c.dom.css.Rect;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -19,8 +17,10 @@ public class Game extends JFrame implements KeyListener {
     boolean restartActive = false;
     int resetSwitcher = 0;
 
-    int xPosition = 600;
-    int yPosition = 600;
+   int xCoinPosition = (int) ((Math.random() * 850) + 750);
+    int yCoinPosition = (int) ((Math.random() * 520) + 200);
+
+    boolean needNewCoin = false;
 
     int lives = 2;
 
@@ -215,19 +215,19 @@ public class Game extends JFrame implements KeyListener {
 
     private void update() {
         if (inPause) {
-            if (characterPosition.x + characterSize > WIDTH - 40) {
+            if (characterPosition.x + characterSize > WIDTH - 60) {
                 characterPosition.x -= 1;
                 touchingWalls = true;
             }
-            if (characterPosition.x < 450) {
+            if (characterPosition.x < 750) {
                 characterPosition.x += 1;
                 touchingWalls = true;
             }
-            if (characterPosition.y + characterSize > HEIGHT - 150) {
+            if (characterPosition.y + characterSize > HEIGHT - 220) {
                 characterPosition.y -= 1;
                 touchingWalls = true;
             }
-            if (characterPosition.y < 100) {
+            if (characterPosition.y < 150) {
                 characterPosition.y += 1;
                 touchingWalls = true;
             }
@@ -320,14 +320,26 @@ public class Game extends JFrame implements KeyListener {
         colors.add(new Color(0, 145, 255));
         colors.add(new Color(136, 0, 255));
         int arrayPicker = (int) (Math.random() * colors.size());
-        if (clearSwitcher % 2 == 0) {
-            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
+        //spawns top then left then right then bottom
+        if (clearSwitcher == 0) {
+            rectangles.add(new Rectangle(new Vector((int) (Math.random() * WIDTH - 50), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
             rectType++;
             clearSwitcher++;
-        } else {
-            rectangles.add(new Rectangle(new Vector(0, (int) (Math.random() * 750)), new Vector(3, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
+        } else if(clearSwitcher == 1){
+            rectangles.add(new Rectangle(new Vector(0, (int) (Math.random() * HEIGHT - 50)), new Vector(ENEMYSPEED, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
             rectType++;
             clearSwitcher++;
+        } else if(clearSwitcher == 2) {
+            rectangles.add(new Rectangle(new Vector(WIDTH - 50, (int) (Math.random() * HEIGHT - 50)), new Vector(-ENEMYSPEED, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
+            rectType++;
+            clearSwitcher++;
+        } else if(clearSwitcher == 3) {
+            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534), HEIGHT - 50), new Vector(0, -ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
+            rectType++;
+            clearSwitcher++;
+        }
+        if(clearSwitcher > 3) {
+            clearSwitcher = 0;
         }
         if (rectType > 4) {
             rectType = 0;
@@ -503,6 +515,23 @@ public class Game extends JFrame implements KeyListener {
                 g.setColor(Color.white);
                 g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
             }
+            g.setColor(Color.YELLOW);
+            g.drawOval(xCoinPosition, yCoinPosition, 15, 23);
+            if (
+                    characterPosition.x < xCoinPosition + 15 &&
+                            characterPosition.x + characterSize > xCoinPosition &&
+                            characterPosition.y < yCoinPosition + 23 &&
+                            characterPosition.y + characterSize > yCoinPosition
+                    ) {
+                coins += 10;
+                xCoinPosition = (int) ((Math.random() * WIDTH - 50) + 50);
+                yCoinPosition = (int) ((Math.random() * HEIGHT - 50) + 50);
+                while(((yCoinPosition > WIDTH / 2 - 100) && (yCoinPosition > WIDTH / 2 + 100)) && ((xCoinPosition > HEIGHT / 2 - 100) && (xCoinPosition > HEIGHT / 2 + 100))) {
+                    System.out.println("Coin spawned in void, corrected");
+                    xCoinPosition = (int) ((Math.random() * WIDTH - 50) + 50);
+                    yCoinPosition = (int) ((Math.random() * HEIGHT - 50) + 50);
+                }
+            }
         }
 
 
@@ -555,41 +584,46 @@ public class Game extends JFrame implements KeyListener {
             //J:\JacksGame\JacksGame\JacksGame\images\menu.png
             g.drawImage(createTexture("C:\\Users\\IGMAdmin\\JacksGame\\images\\menu.png"), 0, 25, WIDTH, HEIGHT, null);
             g.setColor(Color.white);
-            g.drawRect(450, 100, 576, 550);
+            //g.drawRect(450, 100, 576, 550);
+            g.drawRect(750, 150, 950, 620);
             g.setColor(Color.yellow);
-            g.drawString("Coins " + coins + "  (+" + coinMultiplier + ")", 460, 120);
+            g.drawString("Coins " + coins + "  (+" + coinMultiplier + ")", 760, 170);
             if (upgradesPurchased5 > 0) {
                 g.setColor(Color.white);
-                g.drawString("Bullets " + bullets, 550, 120);
+                g.drawString("Bullets " + bullets, 855, 170);
             }
             for(int i = 0; i < rectangles.size(); i++) {
                 Rectangle rect = (Rectangle)rectangles.get(i);
-                if (rect.position.x + rect.size.x > 1026) {
-                        rect.outOfBounds = true;
-                }
-                if (rect.position.x < 450) {
+                if (rect.position.x + rect.size.x > 1700) {
                     rect.outOfBounds = true;
                 }
-                if (rect.position.y + rect.size.x > 650) {
+                if (rect.position.x < 750) {
                     rect.outOfBounds = true;
                 }
-                if (rect.position.y < 100) {
+                if (rect.position.y + rect.size.x > 770) {
+                    rect.outOfBounds = true;
+                }
+                if (rect.position.y < 150) {
                     rect.outOfBounds = true;
                 }
             }
-            g.setColor(Color.YELLOW);
+            if(needNewCoin) {
+                xCoinPosition = (int) ((Math.random() * 850) + 750);
+                yCoinPosition = (int) ((Math.random() * 520) + 200);
+                needNewCoin = false;
+            }
+                g.setColor(Color.YELLOW);
+                g.drawOval(xCoinPosition, yCoinPosition, 15, 23);
+                if (
+                        characterPosition.x < xCoinPosition + 15 &&
+                                characterPosition.x + characterSize > xCoinPosition &&
+                                characterPosition.y < yCoinPosition + 23 &&
+                                characterPosition.y + characterSize > yCoinPosition
+                        ) {
+                    coins += 10;
+                    needNewCoin = true;
+                }
 
-            g.drawOval(xPosition, yPosition, 15, 23);
-            if (
-                            characterPosition.x < xPosition + 15 &&
-                            characterPosition.x + characterSize > xPosition &&
-                            characterPosition.y < yPosition + 23 &&
-                            characterPosition.y + characterSize > yPosition
-                    ) {
-                coins+=10;
-                xPosition = 0;
-                yPosition = 0;
-            }
 
 
         }
@@ -606,8 +640,8 @@ public class Game extends JFrame implements KeyListener {
                     }
 
                 }
-                System.out.println(rectangles.size());
                 rect.age++;
+
                 for (int k = 0; k < rectangles.size(); k++) {
                     Rectangle interceptRect = (Rectangle) rectangles.get(k);
                     if (interceptRect.isBullet) {
@@ -771,6 +805,8 @@ public class Game extends JFrame implements KeyListener {
                 } else if (inPause) {
                     inPause = false;
                     inGame = true;
+                    xCoinPosition = (int)((Math.random() * WIDTH - 50) + 50);
+                    yCoinPosition = (int)((Math.random() * HEIGHT - 50) + 50);
                     clearAll();
                 }
                 break;
@@ -895,7 +931,7 @@ public class Game extends JFrame implements KeyListener {
 
     //entry point for application
     public static void main(String[] args) {
-        Game game = new Game(1066, 800, 60);
+        Game game = new Game(1760, 990, 60);
         game.run();
     }
 
