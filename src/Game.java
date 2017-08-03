@@ -22,6 +22,8 @@ public class Game extends JFrame implements KeyListener {
 
     boolean needNewCoin = false;
 
+    Vector killBox = new Vector(1760 / 2 - 40, 990 / 2 - 40);
+
     int lives = 2;
 
     int score = 10;
@@ -51,7 +53,6 @@ public class Game extends JFrame implements KeyListener {
 
     boolean touchingWalls = false;
 
-    int bullets = 10;
 
     private boolean needUp = false;
     private boolean needDown = false;
@@ -183,7 +184,7 @@ public class Game extends JFrame implements KeyListener {
         lives = 2;
         numFrames = 0;
         spawnFrequency = 500;
-        coins = 0;
+        coins = 10;
         coinMultiplier = 1;
         coinStopper = 0;
         clearSwitcher = 0;
@@ -195,7 +196,6 @@ public class Game extends JFrame implements KeyListener {
         upgradesPurchased6 = 0;
         upgradesPurchased7 = 0;
         obstSize = 50;
-        bullets = 10;
         firstTime = true;
         characterSize = OGCHARACTERSIZE;
         playerSpeed = 6;
@@ -313,7 +313,6 @@ public class Game extends JFrame implements KeyListener {
         ArrayList colors = new ArrayList();
         colors.add(new Color(255, 106, 0));
         colors.add(new Color(0, 235, 255));
-        colors.add(new Color(255, 251, 240));
         colors.add(new Color(255, 242, 0));
         colors.add(new Color(67, 255, 82));
         colors.add(new Color(255, 0, 209));
@@ -341,7 +340,7 @@ public class Game extends JFrame implements KeyListener {
         if(clearSwitcher > 3) {
             clearSwitcher = 0;
         }
-        if (rectType > 4) {
+        if (rectType > 5) {
             rectType = 0;
         }
 
@@ -404,13 +403,7 @@ public class Game extends JFrame implements KeyListener {
             }
         }
         if (upgradeType == 5) {
-            if (coins >= 5 && upgradesPurchased5 > 0) {
-                coins -= 5;
-                upgradesPurchased5++;
-                if (upgradesPurchased5 >= 2) {
-                    bullets += 10;
-                }
-            } else if (coins >= 50) {
+            if (coins >= 50 && upgradesPurchased5 == 0) {
                 coins -= 50;
                 upgradesPurchased5++;
             }
@@ -485,7 +478,6 @@ public class Game extends JFrame implements KeyListener {
         }
         if (inGame) {
             drawShop();
-            Vector killBox = new Vector(WIDTH / 2 - 40, HEIGHT / 2 - 40);
             if (
                     (characterPosition.x < killBox.x + 80 &&
                             characterPosition.x + characterSize > killBox.x &&
@@ -526,11 +518,18 @@ public class Game extends JFrame implements KeyListener {
                 coins += 10;
                 xCoinPosition = (int) ((Math.random() * WIDTH - 50) + 50);
                 yCoinPosition = (int) ((Math.random() * HEIGHT - 50) + 50);
-                while(((yCoinPosition > WIDTH / 2 - 100) && (yCoinPosition > WIDTH / 2 + 100)) && ((xCoinPosition > HEIGHT / 2 - 100) && (xCoinPosition > HEIGHT / 2 + 100))) {
-                    System.out.println("Coin spawned in void, corrected");
-                    xCoinPosition = (int) ((Math.random() * WIDTH - 50) + 50);
-                    yCoinPosition = (int) ((Math.random() * HEIGHT - 50) + 50);
+            }
+            if (
+                            killBox.x < xCoinPosition + 15 &&
+                            killBox.x + 80 > xCoinPosition &&
+                            killBox.y < yCoinPosition + 23 &&
+                            killBox.y + 80 > yCoinPosition
+                    ) {
+                for(int i = 0; i < 1000; i++) {
+                    System.out.println("coin position corrected");
                 }
+                xCoinPosition = (int) ((Math.random() * WIDTH - 100) + 50);
+                yCoinPosition = (int) ((Math.random() * HEIGHT - 100) + 50);
             }
         }
 
@@ -541,7 +540,6 @@ public class Game extends JFrame implements KeyListener {
         g.drawString("Coins: " + coins  + "  (+" + coinMultiplier + ")", 10, 60);
         if (upgradesPurchased5 > 0) {
             g.setColor(Color.white);
-            g.drawString("Bullets " + bullets, 30, 40);
         }
         g.setColor(Color.white);
         for (int i = 0; i < NUMSTARS; i++) {
@@ -578,7 +576,7 @@ public class Game extends JFrame implements KeyListener {
                 g.drawString("Press R to Restart", WIDTH / 2 - 207, HEIGHT / 2 + 100);
             }
         } else if(!gameOver) {
-            score = (int)getAgeInSeconds() * 12;
+            score = (int)(getAgeInSeconds() * 12) + (int)(Math.random() * 10);
         }
         if (inPause) {
             //J:\JacksGame\JacksGame\JacksGame\images\menu.png
@@ -590,7 +588,6 @@ public class Game extends JFrame implements KeyListener {
             g.drawString("Coins " + coins + "  (+" + coinMultiplier + ")", 760, 170);
             if (upgradesPurchased5 > 0) {
                 g.setColor(Color.white);
-                g.drawString("Bullets " + bullets, 855, 170);
             }
             for(int i = 0; i < rectangles.size(); i++) {
                 Rectangle rect = (Rectangle)rectangles.get(i);
@@ -683,7 +680,6 @@ public class Game extends JFrame implements KeyListener {
         if (inGame || inPause) {
             if (needRight) {
                 rectangles.add(shoot(1));
-                System.out.println("Shot");
                 needRight = false;
             }
             if (needUp) {
@@ -772,7 +768,6 @@ public class Game extends JFrame implements KeyListener {
             }
 
         } else {
-            System.out.println("hit wall");
             touchingWalls = false;
         }
     }
@@ -810,9 +805,6 @@ public class Game extends JFrame implements KeyListener {
                     clearAll();
                 }
                 break;
-            case KeyEvent.VK_K:
-                gameOver = true;
-                break;
 
             case KeyEvent.VK_R:
                 if (gameOver) {
@@ -843,27 +835,23 @@ public class Game extends JFrame implements KeyListener {
                 purchaseUpgrades(7);
                 break;
             case KeyEvent.VK_RIGHT:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(1);
-                    bullets--;
                 }
                 break;
             case KeyEvent.VK_UP:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(2);
-                    bullets--;
                 }
                 break;
             case KeyEvent.VK_LEFT:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(3);
-                    bullets--;
                 }
                 break;
             case KeyEvent.VK_DOWN:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(4);
-                    bullets--;
                 }
                 break;
         }
