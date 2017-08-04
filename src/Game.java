@@ -17,6 +17,9 @@ public class Game extends JFrame implements KeyListener {
     boolean restartActive = false;
     int resetSwitcher = 0;
 
+    BufferedImage menu = (createTexture("images\\menu.png "));
+    BufferedImage tooltip = (createTexture("images\\tooltip.png "));
+
    int xCoinPosition = (int) ((Math.random() * 850) + 750);
     int yCoinPosition = (int) ((Math.random() * 520) + 200);
 
@@ -380,9 +383,11 @@ public class Game extends JFrame implements KeyListener {
         }
         if (upgradeType == 2) {
             if (coins >= checkCoinPrice(upgradesPurchased2)) {
-                coins -= checkCoinPrice(upgradesPurchased2);
-                upgradesPurchased2++;
-                playerSpeed += upgradesPurchased2;
+                if(upgradesPurchased2 < 5) {
+                    coins -= checkCoinPrice(upgradesPurchased2);
+                    upgradesPurchased2++;
+                    playerSpeed += upgradesPurchased2;
+                }
             }
         }
         if (upgradeType == 3) {
@@ -489,12 +494,13 @@ public class Game extends JFrame implements KeyListener {
                     lives--;
                     babyClearAll();
                     characterPosition = new Vector(WIDTH - 200, HEIGHT - 200);
-
+                    xCoinPosition = (int) ((Math.random() * 850) + 750);
+                    yCoinPosition = (int) ((Math.random() * 520) + 200);
                 }
             }
         }
         g.clearRect(0, 0, WIDTH, HEIGHT);
-        g.drawImage(createTexture("J:\\JacksGame\\JacksGame\\JacksGame\\images\\tooltip.png "), 10, HEIGHT - 121, WIDTH, 121, null);
+        g.drawImage(tooltip, 10, HEIGHT - 121, WIDTH, 121, null);
         if (inGame) {
             if (firstTime) {
                 createNewRectangle(g);
@@ -580,11 +586,11 @@ public class Game extends JFrame implements KeyListener {
             score = (int)(getAgeInSeconds() * 12) + (int)(Math.random() * 10);
         }
         if (inPause) {
-            //C:\Users\IGMAdmin\JacksGame\images\menu.png
+            //J:\JacksGame\JacksGame\JacksGame\images\menu.png
 
-            g.drawImage(createTexture("J:\\JacksGame\\JacksGame\\JacksGame\\images\\menu.png "), 0, 25, WIDTH, HEIGHT, null);
+            g.drawImage(menu, 0, 25, WIDTH, HEIGHT, null);
             g.setColor(Color.yellow);
-            g.drawOval(225, 425, 15, 23);
+            g.drawOval(220, 425, 15, 23);
             for (int k = 30; k >= 5; k -= 5) {
                 g.setColor(Color.white);
                 g.drawOval(530 - k / 2, 530 - k / 2, k, k);
@@ -664,6 +670,8 @@ public class Game extends JFrame implements KeyListener {
                                 lives--;
                                 babyClearAll();
                                 characterPosition = new Vector(WIDTH - 200, HEIGHT - 200);
+                                xCoinPosition = (int) ((Math.random() * 850) + 750);
+                                yCoinPosition = (int) ((Math.random() * 520) + 200);
                             }
                         }
                     }
@@ -801,11 +809,11 @@ public class Game extends JFrame implements KeyListener {
 
             case KeyEvent.VK_ESCAPE:
                 clearAll();
-                if (inGame) {
+                if (inGame && !gameOver) {
                     inGame = false;
                     inPause = true;
                     clearAll();
-                } else if (inPause) {
+                } else if (inPause && !gameOver) {
                     inPause = false;
                     inGame = true;
                     xCoinPosition = (int)((Math.random() * WIDTH - 50) + 50);
