@@ -17,6 +17,17 @@ public class Game extends JFrame implements KeyListener {
     boolean restartActive = false;
     int resetSwitcher = 0;
 
+   int xCoinPosition = (int) ((Math.random() * 850) + 750);
+    int yCoinPosition = (int) ((Math.random() * 520) + 200);
+
+    boolean needNewCoin = false;
+
+    Vector killBox = new Vector(1760 / 2 - 40, 990 / 2 - 40);
+
+    int lives = 2;
+
+    int score = 10;
+
     boolean trueFirstTime = true;
 
     final int NUMSTARS = 200;
@@ -42,7 +53,6 @@ public class Game extends JFrame implements KeyListener {
 
     boolean touchingWalls = false;
 
-    int bullets = 10;
 
     private boolean needUp = false;
     private boolean needDown = false;
@@ -52,7 +62,7 @@ public class Game extends JFrame implements KeyListener {
 
     int playerSpeed = 6;
     int ENEMYSPEED = 3;
-    int bulletSpeed = 3;
+    int bulletSpeed = 8;
 
     static int coins = 300;
     static int coinMultiplier = 1;
@@ -171,9 +181,10 @@ public class Game extends JFrame implements KeyListener {
 
     public void clearAll() {
         rectangles.clear();
+        lives = 2;
         numFrames = 0;
         spawnFrequency = 500;
-        coins = 0;
+        coins = 10;
         coinMultiplier = 1;
         coinStopper = 0;
         clearSwitcher = 0;
@@ -185,29 +196,43 @@ public class Game extends JFrame implements KeyListener {
         upgradesPurchased6 = 0;
         upgradesPurchased7 = 0;
         obstSize = 50;
-        bullets = 10;
         firstTime = true;
+        characterSize = OGCHARACTERSIZE;
+        playerSpeed = 6;
+    }
+    //used for when a life is lost
+    public void babyClearAll() {
+        try {
+            System.out.println("Sleeping...");
+            Thread.sleep(100);
+            System.out.println("Done sleeping, no interrupt.");
+        } catch (InterruptedException e) {
+            System.out.println("I was interrupted!");
+            e.printStackTrace();
+        }
+        rectangles.clear();
     }
 
     private void update() {
         if (inPause) {
-            if (characterPosition.x + characterSize > WIDTH - 40) {
+            if (characterPosition.x + characterSize > WIDTH - 60) {
                 characterPosition.x -= 1;
                 touchingWalls = true;
             }
-            if (characterPosition.x < 450) {
+            if (characterPosition.x < 750) {
                 characterPosition.x += 1;
                 touchingWalls = true;
             }
-            if (characterPosition.y + characterSize > HEIGHT - 150) {
+            if (characterPosition.y + characterSize > HEIGHT - 220) {
                 characterPosition.y -= 1;
                 touchingWalls = true;
             }
-            if (characterPosition.y < 100) {
+            if (characterPosition.y < 150) {
                 characterPosition.y += 1;
                 touchingWalls = true;
             }
             handelKeys();
+            numFrames++;
         }
         if (inGame) {
             numFrames++;
@@ -288,25 +313,34 @@ public class Game extends JFrame implements KeyListener {
         ArrayList colors = new ArrayList();
         colors.add(new Color(255, 106, 0));
         colors.add(new Color(0, 235, 255));
-        colors.add(new Color(255, 251, 240));
-        colors.add(new Color(249, 255, 0));
+        colors.add(new Color(255, 242, 0));
         colors.add(new Color(67, 255, 82));
         colors.add(new Color(255, 0, 209));
-        //colors.add(new Color(0, 0, 0));
         colors.add(new Color(0, 145, 255));
         colors.add(new Color(136, 0, 255));
-        colors.add(new Color(255, 194, 0));
         int arrayPicker = (int) (Math.random() * colors.size());
-        if (clearSwitcher % 2 == 0) {
-            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false, rectType));
+        //spawns top then left then right then bottom
+        if (clearSwitcher == 0) {
+            rectangles.add(new Rectangle(new Vector((int) (Math.random() * WIDTH - 50), 0), new Vector(0, ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
             rectType++;
             clearSwitcher++;
-        } else {
-            rectangles.add(new Rectangle(new Vector(0, (int) (Math.random() * 750)), new Vector(3, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false, rectType));
+        } else if(clearSwitcher == 1){
+            rectangles.add(new Rectangle(new Vector(0, (int) (Math.random() * HEIGHT - 50)), new Vector(ENEMYSPEED, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
+            rectType++;
+            clearSwitcher++;
+        } else if(clearSwitcher == 2) {
+            rectangles.add(new Rectangle(new Vector(WIDTH - 50, (int) (Math.random() * HEIGHT - 50)), new Vector(-ENEMYSPEED, 0), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), false, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
+            rectType++;
+            clearSwitcher++;
+        } else if(clearSwitcher == 3) {
+            rectangles.add(new Rectangle(new Vector((int) (Math.random() * 534), HEIGHT - 50), new Vector(0, -ENEMYSPEED), new Vector(obstSize, obstSize), (Color) colors.get(arrayPicker), true, (int) (Math.random() * 5) + 1, false, rectType, 0, false));
             rectType++;
             clearSwitcher++;
         }
-        if (rectType > 4) {
+        if(clearSwitcher > 3) {
+            clearSwitcher = 0;
+        }
+        if (rectType > 5) {
             rectType = 0;
         }
 
@@ -338,15 +372,17 @@ public class Game extends JFrame implements KeyListener {
 
     private void purchaseUpgrades(int upgradeType) {
         if (upgradeType == 1) {
-            if (coins >= checkCoinPrice(upgradesPurchased1)) {
+            if ((coins >= checkCoinPrice(upgradesPurchased1)) && characterSize > 20) {
                 coins -= checkCoinPrice(upgradesPurchased1);
                 upgradesPurchased1++;
+                characterSize -= 20;
             }
         }
         if (upgradeType == 2) {
             if (coins >= checkCoinPrice(upgradesPurchased2)) {
                 coins -= checkCoinPrice(upgradesPurchased2);
                 upgradesPurchased2++;
+                playerSpeed += upgradesPurchased2;
             }
         }
         if (upgradeType == 3) {
@@ -367,13 +403,7 @@ public class Game extends JFrame implements KeyListener {
             }
         }
         if (upgradeType == 5) {
-            if (coins >= 5 && upgradesPurchased5 > 0) {
-                coins -= 5;
-                upgradesPurchased5++;
-                if (upgradesPurchased5 >= 2) {
-                    bullets += 10;
-                }
-            } else if (coins >= 50) {
+            if (coins >= 50 && upgradesPurchased5 == 0) {
                 coins -= 50;
                 upgradesPurchased5++;
             }
@@ -392,18 +422,19 @@ public class Game extends JFrame implements KeyListener {
     }
 
     private void buy1() {
+        /*
         if (upgradesPurchased1 == 0) characterSize = 100;
         else if (upgradesPurchased1 == 1) characterSize = OGCHARACTERSIZE - 20;
         else if (upgradesPurchased1 == 2) characterSize = OGCHARACTERSIZE - 40;
         else if (upgradesPurchased1 == 3) characterSize = OGCHARACTERSIZE - 60;
         else if (upgradesPurchased1 == 4) characterSize = OGCHARACTERSIZE - 80;
         else if (upgradesPurchased1 == 5) characterSize = OGCHARACTERSIZE - 90;
+        */
 
     }
 
     private void buy2() {
-        if (upgradesPurchased2 == 0) playerSpeed = 5;
-        else playerSpeed = 5 + upgradesPurchased2;
+
     }
 
     private void buy3() {
@@ -447,17 +478,23 @@ public class Game extends JFrame implements KeyListener {
         }
         if (inGame) {
             drawShop();
-            Vector killBox = new Vector(WIDTH / 2 - 40, HEIGHT / 2 - 40);
             if (
                     (characterPosition.x < killBox.x + 80 &&
                             characterPosition.x + characterSize > killBox.x &&
                             characterPosition.y < killBox.y + 80 &&
                             characterPosition.y + characterSize > killBox.y)
                     ) {
-                gameOver = true;
+                if(lives == 0) gameOver = true;
+                else {
+                    lives--;
+                    babyClearAll();
+                    characterPosition = new Vector(WIDTH - 200, HEIGHT - 200);
+
+                }
             }
         }
         g.clearRect(0, 0, WIDTH, HEIGHT);
+        g.drawImage(createTexture("J:\\JacksGame\\JacksGame\\JacksGame\\images\\tooltip.png "), 10, HEIGHT - 121, WIDTH, 121, null);
         if (inGame) {
             if (firstTime) {
                 createNewRectangle(g);
@@ -466,15 +503,34 @@ public class Game extends JFrame implements KeyListener {
             if (numFrames % spawnFrequency == 0) {
                 createNewRectangle(g);
             }
-            if (numFrames % 60 == 0) {
-                coins += coinMultiplier;
-            }
-            //g.setColor(Color.GREEN);
-            // g.fillRect(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
             for (int k = 150; k >= 5; k -= 5) {
                 g.setColor(Color.white);
                 g.drawOval(WIDTH / 2 - k / 2, HEIGHT / 2 - k / 2, k, k);
+            }
+            g.setColor(Color.YELLOW);
+            g.drawOval(xCoinPosition, yCoinPosition, 15, 23);
+            if (
+                    characterPosition.x < xCoinPosition + 15 &&
+                            characterPosition.x + characterSize > xCoinPosition &&
+                            characterPosition.y < yCoinPosition + 23 &&
+                            characterPosition.y + characterSize > yCoinPosition
+                    ) {
+                coins += 10;
+                xCoinPosition = (int) ((Math.random() * WIDTH - 50) + 50);
+                yCoinPosition = (int) ((Math.random() * HEIGHT - 50) + 50);
+            }
+            if (
+                            killBox.x < xCoinPosition + 15 &&
+                            killBox.x + 80 > xCoinPosition &&
+                            killBox.y < yCoinPosition + 23 &&
+                            killBox.y + 80 > yCoinPosition
+                    ) {
+                for(int i = 0; i < 1000; i++) {
+                    System.out.println("coin position corrected");
+                }
+                xCoinPosition = (int) ((Math.random() * WIDTH - 100) + 50);
+                yCoinPosition = (int) ((Math.random() * HEIGHT - 100) + 50);
             }
         }
 
@@ -482,10 +538,9 @@ public class Game extends JFrame implements KeyListener {
         g.setColor(Color.GREEN);
         g.drawString(Long.toString(fps), 10, 40);
         g.setColor(Color.yellow);
-        g.drawString("Coins: " + coins, 10, 60);
+        g.drawString("Coins " + coins  + "  (+" + coinMultiplier + ")", 10, 60);
         if (upgradesPurchased5 > 0) {
             g.setColor(Color.white);
-            g.drawString("Bullets " + bullets, 30, 40);
         }
         g.setColor(Color.white);
         for (int i = 0; i < NUMSTARS; i++) {
@@ -505,6 +560,15 @@ public class Game extends JFrame implements KeyListener {
             g.setFont(new Font("", Font.PLAIN, 75));
             g.setColor(Color.WHITE);
             g.drawString("Game Over", WIDTH / 2 - 200, HEIGHT / 2);
+            g.setFont(new Font("", Font.PLAIN, 40));
+            if(score < 100) {
+                g.drawString("Score " + score, WIDTH / 2 - 75, HEIGHT / 2 - 100);
+            } else if(score < 1000) {
+                g.drawString("Score " + score, WIDTH / 2 - 90, HEIGHT / 2 - 100);
+            } else {
+                g.drawString("Score " + score, WIDTH / 2 - 100, HEIGHT / 2 - 100);
+            }
+
             if (numFrames % 50 == 0) {
                 resetSwitcher++;
             }
@@ -512,18 +576,77 @@ public class Game extends JFrame implements KeyListener {
                 g.setFont(new Font("", Font.PLAIN, 50));
                 g.drawString("Press R to Restart", WIDTH / 2 - 207, HEIGHT / 2 + 100);
             }
+        } else if(!gameOver) {
+            score = (int)(getAgeInSeconds() * 12) + (int)(Math.random() * 10);
         }
         if (inPause) {
             //C:\Users\IGMAdmin\JacksGame\images\menu.png
-            g.drawImage(createTexture("J:\\JacksGame\\JacksGame\\JacksGame\\images\\menu.png"), 0, 25, WIDTH, HEIGHT, null);
-            g.setColor(Color.white);
-            g.drawRect(450, 100, 576, 550);
+
+            g.drawImage(createTexture("J:\\JacksGame\\JacksGame\\JacksGame\\images\\menu.png "), 0, 25, WIDTH, HEIGHT, null);
             g.setColor(Color.yellow);
-            g.drawString("Coins " + coins, 460, 120);
+            g.drawOval(225, 425, 15, 23);
+            for (int k = 30; k >= 5; k -= 5) {
+                g.setColor(Color.white);
+                g.drawOval(530 - k / 2, 530 - k / 2, k, k);
+            }
+            g.setColor(Color.white);
+            //g.drawRect(450, 100, 576, 550);
+            g.drawRect(750, 150, 950, 620);
+            g.setColor(Color.yellow);
+            g.drawString("Coins " + coins + "  (+" + coinMultiplier + ")", 760, 170);
+            if (upgradesPurchased5 > 0) {
+                g.setColor(Color.white);
+            }
+            for(int i = 0; i < rectangles.size(); i++) {
+                Rectangle rect = (Rectangle)rectangles.get(i);
+                if (rect.position.x + rect.size.x > 1700) {
+                    rect.outOfBounds = true;
+                }
+                if (rect.position.x < 750) {
+                    rect.outOfBounds = true;
+                }
+                if (rect.position.y + rect.size.x > 770) {
+                    rect.outOfBounds = true;
+                }
+                if (rect.position.y < 150) {
+                    rect.outOfBounds = true;
+                }
+            }
+            if(needNewCoin) {
+                xCoinPosition = (int) ((Math.random() * 850) + 750);
+                yCoinPosition = (int) ((Math.random() * 520) + 200);
+                needNewCoin = false;
+            }
+                g.setColor(Color.YELLOW);
+                g.drawOval(xCoinPosition, yCoinPosition, 15, 23);
+                if (
+                        characterPosition.x < xCoinPosition + 15 &&
+                                characterPosition.x + characterSize > xCoinPosition &&
+                                characterPosition.y < yCoinPosition + 23 &&
+                                characterPosition.y + characterSize > yCoinPosition
+                        ) {
+                    coins += 10;
+                    needNewCoin = true;
+                }
+
+
+
         }
-        if (inGame || inPause) {
+        if ((inGame || inPause) && !gameOver) {
+            if (numFrames % 60 == 0) {
+                coins += coinMultiplier;
+            }
             for (int i = 0; i < rectangles.size(); i++) {
                 Rectangle rect = (Rectangle) rectangles.get(i);
+                //cleaning up old rectangles
+                if(rect.age > 600) {
+                    if(!rect.rectangleAlive) {
+                        rectangles.remove(i);
+                    }
+
+                }
+                rect.age++;
+
                 for (int k = 0; k < rectangles.size(); k++) {
                     Rectangle interceptRect = (Rectangle) rectangles.get(k);
                     if (interceptRect.isBullet) {
@@ -536,8 +659,12 @@ public class Game extends JFrame implements KeyListener {
                 if (!rect.isBullet) {
                     if (!checkCollision(characterPosition, rect, (int) rect.size.x, characterSize)) {
                         if (rect.rectangleAlive) {
-                            gameOver = true;
-                            //characterPosition.set((int) (Math.random() * WIDTH), (int) (Math.random() * HEIGHT));
+                            if(lives == 0) gameOver = true;
+                            else {
+                                lives--;
+                                babyClearAll();
+                                characterPosition = new Vector(WIDTH - 200, HEIGHT - 200);
+                            }
                         }
                     }
                 }
@@ -547,13 +674,20 @@ public class Game extends JFrame implements KeyListener {
         g.setColor(Color.white);
         if ((inGame || inPause) && !gameOver) {
             g.drawRect((int) characterPosition.x, (int) characterPosition.y, characterSize, characterSize);
-            System.out.println("Character size is: " + characterSize);
+            g.setColor(Color.white);
+            int moveOverLives = 20;
+            for(int i = lives + 1; i != 0; i--) {
+                g.drawRect(WIDTH - moveOverLives, 40, 10, 10);
+                moveOverLives+=20;
+            }
+            moveOverLives+=20;
+            g.drawString("Lives:", WIDTH - moveOverLives, 50);
+
         }
 
         if (inGame || inPause) {
             if (needRight) {
                 rectangles.add(shoot(1));
-                System.out.println("Shot");
                 needRight = false;
             }
             if (needUp) {
@@ -592,16 +726,16 @@ public class Game extends JFrame implements KeyListener {
         Vector spawnPos;
         if (direction == 1) {
             spawnPos = new Vector(characterPosition.x + characterSize, (float) (characterPosition.y + (0.5 * characterSize)));
-            return new Rectangle(spawnPos, new Vector(bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 8, true, 100);
+            return new Rectangle(spawnPos, new Vector(bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 8, true, 100, 0, false);
         } else if (direction == 2) {
             spawnPos = new Vector((float) (characterPosition.x + (0.5 * characterSize)), characterPosition.y);
-            return new Rectangle(spawnPos, new Vector(0, -bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true, 100);
+            return new Rectangle(spawnPos, new Vector(0, -bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true, 100, 0, false);
         } else if (direction == 3) {
             spawnPos = new Vector(characterPosition.x, (float) (characterPosition.y + (0.5 * characterSize)));
-            return new Rectangle(spawnPos, new Vector(-bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 0, true, 100);
+            return new Rectangle(spawnPos, new Vector(-bulletSpeed, 0), new Vector(10, 10), Color.RED, false, 0, true, 100, 0, false);
         } else {
             spawnPos = new Vector((float) (characterPosition.x + (0.5 * characterSize)), characterPosition.y + characterSize);
-            return new Rectangle(spawnPos, new Vector(0, bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true, 100);
+            return new Rectangle(spawnPos, new Vector(0, bulletSpeed), new Vector(10, 10), Color.RED, false, 0, true, 100, 0, false);
         }
 
     }
@@ -642,7 +776,6 @@ public class Game extends JFrame implements KeyListener {
             }
 
         } else {
-            System.out.println("hit wall");
             touchingWalls = false;
         }
     }
@@ -671,16 +804,21 @@ public class Game extends JFrame implements KeyListener {
                 if (inGame) {
                     inGame = false;
                     inPause = true;
+                    clearAll();
                 } else if (inPause) {
                     inPause = false;
                     inGame = true;
+                    xCoinPosition = (int)((Math.random() * WIDTH - 50) + 50);
+                    yCoinPosition = (int)((Math.random() * HEIGHT - 50) + 50);
+                    clearAll();
                 }
-
                 break;
+
             case KeyEvent.VK_R:
                 if (gameOver) {
                     clearAll();
                     gameOver = false;
+                    lives = 2;
                 }
                 break;
             case KeyEvent.VK_1:
@@ -705,27 +843,23 @@ public class Game extends JFrame implements KeyListener {
                 purchaseUpgrades(7);
                 break;
             case KeyEvent.VK_RIGHT:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(1);
-                    bullets--;
                 }
                 break;
             case KeyEvent.VK_UP:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(2);
-                    bullets--;
                 }
                 break;
             case KeyEvent.VK_LEFT:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(3);
-                    bullets--;
                 }
                 break;
             case KeyEvent.VK_DOWN:
-                if (upgradesPurchased5 > 0 && bullets > 0) {
+                if (upgradesPurchased5 > 0) {
                     needShoot(4);
-                    bullets--;
                 }
                 break;
         }
@@ -793,7 +927,7 @@ public class Game extends JFrame implements KeyListener {
 
     //entry point for application
     public static void main(String[] args) {
-        Game game = new Game(1066, 800, 60);
+        Game game = new Game(1760, 990, 60);
         game.run();
     }
 
